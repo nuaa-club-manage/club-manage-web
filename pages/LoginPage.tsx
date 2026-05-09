@@ -6,10 +6,19 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [isAdministrator, setIsAdministrator] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login logic
-    alert(`以 ${isAdministrator ? '管理员' : '普通用户'} 身份登录成功！`);
+    const form = e.currentTarget as HTMLFormElement;
+    const credential = (form.elements.namedItem('credential') as HTMLInputElement).value;
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential, password }),
+    });
+    const data = await res.json();
+    console.log(data);
     navigate('/');
   };
 
