@@ -41,7 +41,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
           </div>
         </div>
         <div className="mt-6 text-right">
-          <Link to={`/activities/${activity.id}`} className="inline-flex items-center font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+          <Link to={`/activities/${activity.activityId ?? activity.id}`} className="inline-flex items-center font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
             查看详情
             <ArrowRightIcon className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" />
           </Link>

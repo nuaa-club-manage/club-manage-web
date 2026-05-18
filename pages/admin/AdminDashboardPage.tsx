@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { mockPendingClubs, mockPendingActivities, mockUsers } from '../../data/mockData';
 import { ClubIcon, CalendarIcon, UsersIcon, ArrowRightIcon } from '../../components/icons';
+import { searchUsers, getPendingClubs, getPendingActivities } from '../../services/adminApi';
 
 const AdminDashboardPage: React.FC = () => {
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+  const [pendingClubsCount, setPendingClubsCount] = useState<number | null>(null);
+  const [pendingActivitiesCount, setPendingActivitiesCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    searchUsers(1, 1, '').then(result => setTotalUsers(result.total)).catch(() => {});
+    getPendingClubs().then(data => setPendingClubsCount(data.length)).catch(() => {});
+    getPendingActivities().then(data => setPendingActivitiesCount(data.length)).catch(() => {});
+  }, []);
+
   const stats = [
-    { title: '待审核社团', count: mockPendingClubs.length, link: '/admin/clubs', icon: ClubIcon, color: 'bg-blue-500' },
-    { title: '待审核活动', count: mockPendingActivities.length, link: '/admin/activities', icon: CalendarIcon, color: 'bg-green-500' },
-    { title: '总用户数', count: mockUsers.length, link: '/admin/users', icon: UsersIcon, color: 'bg-purple-500' },
+    { title: '待审核社团', count: pendingClubsCount ?? '...', link: '/admin/clubs', icon: ClubIcon, color: 'bg-blue-500' },
+    { title: '待审核活动', count: pendingActivitiesCount ?? '...', link: '/admin/activities', icon: CalendarIcon, color: 'bg-green-500' },
+    { title: '总用户数', count: totalUsers ?? '...', link: '/admin/users', icon: UsersIcon, color: 'bg-purple-500' },
   ];
 
   return (

@@ -85,10 +85,8 @@ const LoginPage: React.FC = () => {
       alert('请先填写手机号');
       return;
     }
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendCode`, {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendCode?contact=${encodeURIComponent(credential)}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contact: credential }),
     });
     const data = await res.json();
     if (data.code !== 200) {
@@ -141,7 +139,7 @@ const LoginPage: React.FC = () => {
     console.log(data);
     if (data.code === 200) {
       localStorage.setItem('token', data.data);
-      navigate('/');
+      navigate(isAdministrator ? '/admin/dashboard' : '/');
     } else {
       alert(data.message);
       if (!isAdministrator) refreshCaptcha();
@@ -166,7 +164,7 @@ const LoginPage: React.FC = () => {
               onClick={() => setIsAdministrator(false)}
               className={`w-1/2 py-2 px-4 rounded-full text-sm font-semibold transition-colors ${!isAdministrator ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow' : 'text-gray-600 dark:text-gray-300'}`}
             >
-              普通用户
+              用户
             </button>
             <button
               type="button"

@@ -1,11 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { mockClubs, mockActivities } from '../data/mockData';
 import ClubCard from '../components/ClubCard';
 import ActivityCard from '../components/ActivityCard';
 import { ArrowRightIcon } from '../components/icons';
+import { getClubAverageScores } from '../services/ratingApi';
+import type { ClubAverageScore } from '../services/ratingApi';
+import { getClubs } from '../services/clubApi';
+import type { ApiClub } from '../services/clubApi';
+import type { Club, Activity } from '../types';
+import { getPublishedActivities, apiActivityToActivity } from '../services/activityApi';
+
+function apiClubToClub(c: ApiClub): Club {
+  return {
+    id: 0,
+    name: c.clubName,
+    description: c.clubInformation || '',
+    memberCount: 0,
+    category: c.school || '未分类',
+    imageUrl: `https://picsum.photos/seed/${c.clubId}/600/400`,
+    rating: { score: 0, count: 0 },
+    members: [],
+    joinRequests: [],
+    status: 'approved',
+    clubId: c.clubId,
+  };
+}
 
 const HomePage: React.FC = () => {
+  const [featuredClubs, setFeaturedClubs] = useState<Club[]>([]);
+  const [averageScores, setAverageScores] = useState<ClubAverageScore[]>([]);
+  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+
+  useEffect(() => {
+    getClubs()
+      .then(data => setFeaturedClubs(data.slice(0, 4).map(apiClubToClub)))
+      .catch(() => {});
+    getClubAverageScores()
+      .then(setAverageScores)
+      .catch(() => {});
+    getPublishedActivities()
+      .then(data => setRecentActivities(data.slice(0, 3).map(apiActivityToActivity)))
+      .catch(() => {});
+  }, []);
+
+  const getScore = (clubId: string) =>
+    averageScores.find(s => s.clubId === clubId);
+
   return (
     <div className="space-y-20 pb-12">
       {/* Hero Section */}
@@ -30,31 +70,31 @@ const HomePage: React.FC = () => {
       {/* Featured Clubs Section */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">精选社团</h2>
-            <Link to="/clubs" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center">
-                <span>查看全部</span>
-                <ArrowRightIcon className="w-4 h-4 ml-1" />
-            </Link>
+          <h2 className="text-3xl font-bold">精选社团</h2>
+          <Link to="/clubs" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center">
+            <span>查看全部</span>
+            <ArrowRightIcon className="w-4 h-4 ml-1" />
+          </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {mockClubs.slice(0, 4).map(club => (
-            <ClubCard key={club.id} club={club} />
+          {featuredClubs.map(club => (
+            <ClubCard key={club.clubId} club={club} averageScore={getScore(club.clubId!)} />
           ))}
         </div>
       </section>
 
       {/* Upcoming Activities Section */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8">
-         <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">近期活动</h2>
-            <Link to="/activities" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center">
-                <span>查看全部</span>
-                <ArrowRightIcon className="w-4 h-4 ml-1" />
-            </Link>
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold">近期活动</h2>
+          <Link to="/activities" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center">
+            <span>查看全部</span>
+            <ArrowRightIcon className="w-4 h-4 ml-1" />
+          </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {mockActivities.slice(0, 3).map(activity => (
-            <ActivityCard key={activity.id} activity={activity} />
+          {recentActivities.map(activity => (
+            <ActivityCard key={activity.activityId} activity={activity} />
           ))}
         </div>
       </section>

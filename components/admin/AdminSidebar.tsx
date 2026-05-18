@@ -1,14 +1,23 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { NuaaLogoIcon, DashboardIcon, UsersIcon, ClubIcon, CalendarIcon } from '../icons';
 
 const AdminSidebar: React.FC = () => {
+  const navigate = useNavigate();
   const activeLinkClass = 'bg-indigo-700 text-white';
   const inactiveLinkClass = 'text-gray-300 hover:bg-gray-700 hover:text-white';
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
   const navLinks = [
     { to: '/admin/dashboard', text: '仪表盘', icon: DashboardIcon },
     { to: '/admin/users', text: '用户管理', icon: UsersIcon },
+    { to: '/admin/club-list', text: '社团列表', icon: ClubIcon },
+    { to: '/admin/club-members', text: '所有社团成员', icon: UsersIcon },
+    { to: '/admin/activity-list', text: '活动列表', icon: CalendarIcon },
     { to: '/admin/clubs', text: '社团审核', icon: ClubIcon },
     { to: '/admin/activities', text: '活动审核', icon: CalendarIcon },
   ];
@@ -39,9 +48,9 @@ const AdminSidebar: React.FC = () => {
         </ul>
       </nav>
       <div className="p-4 border-t border-gray-700">
-        <NavLink to="/" className="text-sm text-center block text-gray-400 hover:text-white">
-            返回主站
-        </NavLink>
+        <button onClick={handleLogout} className="w-full text-sm text-center block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition-colors">
+          退出登录
+        </button>
       </div>
     </aside>
   );

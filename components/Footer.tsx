@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { NuaaLogoIcon } from './icons';
 
 const Footer: React.FC = () => {
@@ -16,9 +15,6 @@ const Footer: React.FC = () => {
         <p className="mt-2">
           项目小组: 101C 徐正 章志鹏 朴威霖 刘翘宁
         </p>
-         <div className="mt-4">
-          <Link to="/index" className="hover:underline text-indigo-600 dark:text-indigo-400">页面索引</Link>
-        </div>
       </div>
     </footer>
   );

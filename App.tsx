@@ -12,14 +12,23 @@ import EditProfilePage from './pages/EditProfilePage';
 import CreateClubPage from './pages/CreateClubPage';
 import PublishActivityPage from './pages/PublishActivityPage';
 import ActivityDetailPage from './pages/ActivityDetailPage';
+import ActivityParticipantsPage from './pages/ActivityParticipantsPage';
+import ClubAdminPage from './pages/ClubAdminPage';
+import ClubMembersPage from './pages/ClubMembersPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
+import DeleteAccountPage from './pages/DeleteAccountPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUserManagementPage from './pages/admin/AdminUserManagementPage';
+import AdminEditUserPage from './pages/admin/AdminEditUserPage';
 import AdminClubApprovalPage from './pages/admin/AdminClubApprovalPage';
 import AdminActivityApprovalPage from './pages/admin/AdminActivityApprovalPage';
+import AdminClubListPage from './pages/admin/AdminClubListPage';
+import AdminClubMembersPage from './pages/admin/AdminClubMembersPage';
+import AdminActivityListPage from './pages/admin/AdminActivityListPage';
 import PageIndexPage from './pages/PageIndexPage';
 
 const App: React.FC = () => {
@@ -39,8 +48,13 @@ const App: React.FC = () => {
       <Route path="/activities" element={<ActivityListPage />} />
       <Route path="/activities/publish" element={<PublishActivityPage />} />
       <Route path="/activities/:activityId" element={<ActivityDetailPage />} />
+      <Route path="/activities/:activityId/participants" element={<ActivityParticipantsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/profile/edit" element={<EditProfilePage />} />
+      <Route path="/profile/change-password" element={<ChangePasswordPage />} />
+      <Route path="/profile/delete-account" element={<DeleteAccountPage />} />
+      <Route path="/club-admin" element={<ClubAdminPage />} />
+      <Route path="/club-admin/:clubId/members" element={<ClubMembersPage />} />
       <Route path="/index" element={<PageIndexPage />} />
 
       {/* Auth Routes */}
@@ -52,7 +66,11 @@ const App: React.FC = () => {
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
       <Route path="/admin/users" element={<AdminUserManagementPage />} />
+      <Route path="/admin/users/edit" element={<AdminEditUserPage />} />
       <Route path="/admin/clubs" element={<AdminClubApprovalPage />} />
+      <Route path="/admin/club-list" element={<AdminClubListPage />} />
+      <Route path="/admin/club-members" element={<AdminClubMembersPage />} />
+      <Route path="/admin/activity-list" element={<AdminActivityListPage />} />
       <Route path="/admin/activities" element={<AdminActivityApprovalPage />} />
     </Routes>
   );

@@ -15,6 +15,7 @@ const MobileNavMenu: React.FC<MobileNavMenuProps> = ({ isOpen, onClose }) => {
         { path: "/", name: "主页" },
         { path: "/clubs", name: "社团列表" },
         { path: "/activities", name: "活动列表" },
+        { path: "/club-admin", name: "社团管理" },
       ],
     },
     {

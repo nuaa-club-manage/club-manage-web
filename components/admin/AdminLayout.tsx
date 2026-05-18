@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import { MenuIcon, NuaaLogoIcon } from '../icons';
 
@@ -37,9 +37,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <NuaaLogoIcon className="w-8 h-8" />
             <span>管理后台</span>
           </NavLink>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
-            <MenuIcon className="h-6 w-6" />
-          </button>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-3 rounded-md transition-colors">
+              登录
+            </Link>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
+              <MenuIcon className="h-6 w-6" />
+            </button>
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">

@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { NuaaLogoIcon, UserCircleIcon, MenuIcon } from './icons';
 import MobileNavMenu from './MobileNavMenu';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -29,8 +35,8 @@ const Header: React.FC = () => {
               <Link to="/" className="flex items-center space-x-2 text-lg font-bold text-gray-800 dark:text-gray-200">
                 <NuaaLogoIcon className="w-10 h-10 text-gray-700 dark:text-gray-300"/>
                 <div className="hidden sm:flex flex-col">
-                    <span className="text-xs font-medium">南航</span>
-                    <span className="text-sm font-semibold">社团管理</span>
+                    <span className="text-xs font-medium">南京航空航天大学</span>
+                    <span className="text-sm font-semibold">高校社团管理系统</span>
                 </div>
               </Link>
             </div>
@@ -39,15 +45,16 @@ const Header: React.FC = () => {
               <NavLink to="/" className={navLinkClass}>主页</NavLink>
               <NavLink to="/clubs" className={navLinkClass}>社团列表</NavLink>
               <NavLink to="/activities" className={navLinkClass}>活动列表</NavLink>
+              <NavLink to="/club-admin" className={navLinkClass}>社团管理</NavLink>
             </nav>
 
             <div className="flex items-center space-x-4">
               <NavLink to="/profile" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
                   <UserCircleIcon className="w-8 h-8"/>
               </NavLink>
-              <Link to="/login" className="hidden sm:block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">
-                登录
-              </Link>
+              <button onClick={handleLogout} className="hidden sm:block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">
+                退出登录
+              </button>
             </div>
           </div>
         </div>

@@ -1,22 +1,81 @@
-import React, { useState } from 'react';
-import { mockUser, mockClubs, mockActivities } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { mockUser } from '../data/mockData';
 import { Link } from 'react-router-dom';
-import { UsersIcon, CalendarIcon, ArrowRightIcon, StarRatingIcon, PlusCircleIcon, CogIcon } from '../components/icons';
+import { UsersIcon, CalendarIcon, ArrowRightIcon, StarRatingIcon, LockClosedIcon } from '../components/icons';
 import StarRating from '../components/StarRating';
+import { fetchUserInfo } from '../services/userApi';
+import { getMyRegistrations, cancelRegistration } from '../services/activityApi';
+import { getMyRatings, cancelRating } from '../services/ratingApi';
+import type { MyRatingRecord } from '../services/ratingApi';
+import { getMyClubApplications } from '../services/memberApi';
+import type { MyClubApplication } from '../services/memberApi';
+import type { UserInfo, MyRegistrationRecord } from '../types';
 
 const ProfilePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('joinedClubs');
+  const [activeTab, setActiveTab] = useState('applications');
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [myRegistrations, setMyRegistrations] = useState<MyRegistrationRecord[]>([]);
+  const [regLoading, setRegLoading] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [myRatings, setMyRatings] = useState<MyRatingRecord[]>([]);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+  const [cancellingRatingId, setCancellingRatingId] = useState<string | null>(null);
+  const [myApplications, setMyApplications] = useState<MyClubApplication[]>([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
 
-  const userJoinedClubs = mockClubs.filter(club => mockUser.joinedClubs.includes(club.id));
-  const userManagedClubs = mockClubs.filter(club => mockUser.managedClubs.includes(club.id));
-  const userRegisteredActivities = mockActivities.filter(activity => mockUser.registeredActivities.includes(activity.id));
-  const userPublishedActivities = mockActivities.filter(activity => mockUser.managedClubs.includes(activity.clubId));
-  
-  const userRatings = mockUser.ratings.map(rating => {
-    const club = mockClubs.find(c => c.id === rating.clubId);
-    return { ...rating, club };
-  }).filter(item => item.club);
+  useEffect(() => {
+    fetchUserInfo().then(setUserInfo).catch((err) => console.error('[userInfo]', err));
+  }, []);
 
+  useEffect(() => {
+    if (activeTab === 'registeredActivities' && myRegistrations.length === 0) {
+      setRegLoading(true);
+      getMyRegistrations()
+        .then(setMyRegistrations)
+        .catch((err) => console.error('[myRegistrations]', err))
+        .finally(() => setRegLoading(false));
+    }
+    if (activeTab === 'ratings' && myRatings.length === 0) {
+      setRatingsLoading(true);
+      getMyRatings()
+        .then(setMyRatings)
+        .catch((err) => console.error('[myRatings]', err))
+        .finally(() => setRatingsLoading(false));
+    }
+    if ((activeTab === 'applications' || activeTab === 'joinedClubs') && myApplications.length === 0) {
+      setApplicationsLoading(true);
+      getMyClubApplications()
+        .then(setMyApplications)
+        .catch((err) => console.error('[myApplications]', err))
+        .finally(() => setApplicationsLoading(false));
+    }
+  }, [activeTab]);
+
+  const handleCancelRegistration = async (registrationId: string) => {
+    setCancellingId(registrationId);
+    try {
+      const msg = await cancelRegistration(registrationId);
+      alert(msg);
+      setMyRegistrations(prev => prev.filter(r => r.registrationId !== registrationId));
+    } catch (err: any) {
+      alert(err.message ?? '取消报名失败，请重试');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const handleCancelRating = async (ratingId: string, clubId: string) => {
+    setCancellingRatingId(ratingId);
+    try {
+      const msg = await cancelRating(clubId);
+      alert(msg);
+      setMyRatings(prev => prev.filter(r => r.ratingId !== ratingId));
+    } catch (err: any) {
+      alert(err.message ?? '取消评分失败，请重试');
+    } finally {
+      setCancellingRatingId(null);
+    }
+  };
 
   const tabClass = (tabName: string) =>
     `flex-1 md:flex-none px-4 py-3 font-semibold transition-colors cursor-pointer text-sm sm:text-base whitespace-nowrap text-center ${
@@ -26,10 +85,9 @@ const ProfilePage: React.FC = () => {
     }`;
 
   const tabs = [
+    { id: 'applications', label: '我的入社申请', icon: UsersIcon },
     { id: 'joinedClubs', label: '我加入的社团', icon: UsersIcon },
-    { id: 'createdClubs', label: '我创建的社团', icon: UsersIcon },
     { id: 'registeredActivities', label: '我报名的活动', icon: CalendarIcon },
-    { id: 'publishedActivities', label: '我发布的活动', icon: CalendarIcon },
     { id: 'ratings', label: '我的评分', icon: StarRatingIcon },
   ];
 
@@ -39,23 +97,21 @@ const ProfilePage: React.FC = () => {
         {/* Left Sidebar - Profile Info */}
         <aside className="lg:w-1/3 xl:w-1/4">
           <div className="sticky top-20 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
-            <img src={mockUser.avatarUrl} alt={mockUser.name} className="w-28 h-28 mx-auto rounded-full border-4 border-indigo-500 mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{mockUser.name}</h1>
-            <p className="text-base text-gray-500 dark:text-gray-400 mt-1">{mockUser.email}</p>
+            <img src={mockUser.avatarUrl} alt={userInfo?.userName ?? mockUser.name} className="w-28 h-28 mx-auto rounded-full border-4 border-indigo-500 mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{userInfo?.realName ?? userInfo?.userName ?? mockUser.name}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">学号：{userInfo?.userId ?? '—'}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{userInfo?.userMailbox ?? userInfo?.phoneNumber ?? mockUser.email}</p>
             <div className="mt-6 flex flex-col gap-3">
               <Link to="/profile/edit" className="w-full inline-block bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
                 编辑个人资料
               </Link>
-              <Link to="/clubs/create" className="w-full inline-flex justify-center items-center bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                <PlusCircleIcon className="w-5 h-5 mr-2" />
-                成立社团
+              <Link to="/profile/change-password" className="w-full inline-flex justify-center items-center bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors">
+                <LockClosedIcon className="w-5 h-5 mr-2" />
+                修改密码
               </Link>
-              {mockUser.managedClubs.length > 0 && (
-                  <Link to="/activities/publish" className="w-full inline-flex justify-center items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                      <PlusCircleIcon className="w-5 h-5 mr-2" />
-                      发布活动
-                  </Link>
-              )}
+              <Link to="/profile/delete-account" className="w-full inline-block text-center bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                注销账号
+              </Link>
             </div>
           </div>
         </aside>
@@ -65,119 +121,123 @@ const ProfilePage: React.FC = () => {
           <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
             <nav className="flex">
               {tabs.map(tab => (
-                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={tabClass(tab.id)}>
-                    <span className="flex items-center justify-center"><tab.icon className="w-5 h-5 mr-2 hidden sm:inline" />{tab.label}</span>
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={tabClass(tab.id)}>
+                  <span className="flex items-center justify-center"><tab.icon className="w-5 h-5 mr-2 hidden sm:inline" />{tab.label}</span>
                 </button>
               ))}
             </nav>
           </div>
 
           <div className="mt-6">
-            {activeTab === 'joinedClubs' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {userJoinedClubs.map(club => (
-                  <div key={club.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col justify-between">
+            {activeTab === 'applications' && (
+              <div className="space-y-4">
+                {applicationsLoading ? (
+                  <p className="text-center text-gray-400 py-10">加载中...</p>
+                ) : myApplications.length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-10">暂无入社申请记录</p>
+                ) : myApplications.map((item, idx) => (
+                  <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
                     <div>
-                      <img src={club.imageUrl} alt={club.name} className="w-full h-32 object-cover rounded-md mb-4" />
-                      <h3 className="text-lg font-bold">{club.name}</h3>
-                      <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm h-12 overflow-hidden text-ellipsis">{club.description}</p>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">{item.clubName}</h3>
+                      <p className="text-xs text-gray-400 mt-1">社团ID：{item.clubId}</p>
                     </div>
-                    <div className="mt-4 pt-4 border-t dark:border-gray-700 flex justify-between items-center">
-                        <Link to={`/clubs/${club.id}`} className="inline-flex items-center font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm">
-                            查看社团
-                            <ArrowRightIcon className="w-4 h-4 ml-1" />
-                        </Link>
-                        {!userManagedClubs.find(c => c.id === club.id) && (
-                            <button className="border border-red-500 text-red-500 font-semibold py-1 px-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors text-xs">
-                                退出社团
-                            </button>
-                        )}
-                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      item.reviewState === '审核通过' || item.reviewState === '通过'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                        : item.reviewState === '审核退回' || item.reviewState === '拒绝'
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                    }`}>
+                      {item.reviewState}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
-            {activeTab === 'createdClubs' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {userManagedClubs.map(club => (
-                  <div key={club.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col justify-between">
+            {activeTab === 'joinedClubs' && (
+              <div className="space-y-4">
+                {applicationsLoading ? (
+                  <p className="text-center text-gray-400 py-10">加载中...</p>
+                ) : myApplications.filter(a => a.reviewState === '审核通过' || a.reviewState === '通过').length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-10">您还没有加入任何社团</p>
+                ) : myApplications.filter(a => a.reviewState === '审核通过' || a.reviewState === '通过').map((item, idx) => (
+                  <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
                     <div>
-                      <img src={club.imageUrl} alt={club.name} className="w-full h-32 object-cover rounded-md mb-4" />
-                      <h3 className="text-lg font-bold">{club.name}</h3>
-                      <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm h-12 overflow-hidden text-ellipsis">{club.description}</p>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">{item.clubName}</h3>
+                      <p className="text-xs text-gray-400 mt-1">社团ID：{item.clubId}</p>
                     </div>
-                    <div className="mt-4 pt-4 border-t dark:border-gray-700 flex justify-end items-center">
-                        <Link to={`/clubs/${club.id}/manage`} className="inline-flex items-center font-semibold bg-gray-600 text-white hover:bg-gray-700 py-2 px-3 rounded-lg text-sm">
-                            管理社团
-                            <CogIcon className="w-4 h-4 ml-2" />
-                        </Link>
-                    </div>
+                    <Link to={`/clubs/${item.clubId}`} className="inline-flex items-center font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm">
+                      查看社团
+                      <ArrowRightIcon className="w-4 h-4 ml-1" />
+                    </Link>
                   </div>
                 ))}
               </div>
             )}
             {activeTab === 'registeredActivities' && (
               <div className="space-y-4">
-                {userRegisteredActivities.map(activity => (
-                   <div key={activity.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <img src={activity.imageUrl} alt={activity.title} className="w-16 h-16 object-cover rounded-md" />
-                      <div className="flex-grow">
-                        <h3 className="text-base font-bold">
-                           <Link to={`/activities/${activity.id}`} className="hover:underline">{activity.title}</Link>
-                        </h3>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">{activity.club}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{new Date(activity.date).toDateString()} at {activity.time}</p>
-                      </div>
+                {regLoading ? (
+                  <p className="text-center text-gray-400 py-10">加载中...</p>
+                ) : myRegistrations.length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400">您还没有报名任何活动</p>
+                ) : myRegistrations.map(record => (
+                  <div key={record.registrationId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
+                    <div className="flex-grow">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">{record.title}</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 truncate max-w-md">{record.content}</p>
+                      <p className="text-xs text-gray-400 mt-1">{new Date(record.publishTime).toLocaleDateString('zh-CN')}</p>
                     </div>
-                    <button className="border border-red-500 text-red-500 font-semibold py-1 px-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors text-xs flex-shrink-0">
-                      取消
-                    </button>
+                    <div className="ml-4 flex-shrink-0 flex items-center gap-3">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        record.reviewState === '审核通过'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                          : record.reviewState === '审核退回'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                      }`}>
+                        {record.reviewState}
+                      </span>
+                      {(record.reviewState === '审核中' || record.reviewState === '待审核' || record.reviewState === '审核通过') && (
+                        <button
+                          onClick={() => handleCancelRegistration(record.registrationId)}
+                          disabled={cancellingId === record.registrationId}
+                          className="border border-red-500 text-red-500 font-semibold py-1 px-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {cancellingId === record.registrationId ? '取消中...' : '取消报名'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
-            {activeTab === 'publishedActivities' && (
-              <div className="space-y-4">
-                {userPublishedActivities.length > 0 ? userPublishedActivities.map(activity => (
-                   <div key={activity.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <img src={activity.imageUrl} alt={activity.title} className="w-16 h-16 object-cover rounded-md" />
-                      <div>
-                        <h3 className="text-base font-bold">
-                            <Link to={`/activities/${activity.id}`} className="hover:underline">{activity.title}</Link>
-                        </h3>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">{activity.club}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{new Date(activity.date).toDateString()} at {activity.time}</p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2 flex-shrink-0">
-                        <button className="border border-gray-400 text-gray-600 dark:border-gray-500 dark:text-gray-300 font-semibold py-1 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-xs">
-                          编辑
-                        </button>
-                        <button className="border border-red-500 text-red-500 font-semibold py-1 px-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors text-xs">
-                          取消
-                        </button>
-                    </div>
-                  </div>
-                )) : <p className="text-center text-gray-500 dark:text-gray-400">您还没有发布任何活动。</p>}
-              </div>
-            )}
             {activeTab === 'ratings' && (
-               <div className="space-y-4">
-                {userRatings.map(ratingItem => (
-                   <div key={ratingItem.clubId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
+              <div className="space-y-4">
+                {ratingsLoading ? (
+                  <p className="text-center text-gray-400 py-10">加载中...</p>
+                ) : myRatings.length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400">您还没有评分记录</p>
+                ) : myRatings.map(item => (
+                  <div key={item.ratingId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <img src={ratingItem.club.imageUrl} alt={ratingItem.club.name} className="w-16 h-16 object-cover rounded-md" />
+                      <div className="w-16 h-16 rounded-md bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center flex-shrink-0">
+                        <span className="text-indigo-600 dark:text-indigo-300 font-bold text-lg">{item.clubName.charAt(0)}</span>
+                      </div>
                       <div>
-                        <h3 className="text-base font-bold">{ratingItem.club.name}</h3>
+                        <h3 className="text-base font-bold text-gray-900 dark:text-white">{item.clubName}</h3>
                         <div className="flex items-center mt-1">
-                          <StarRating rating={ratingItem.score} readOnly size="h-4 w-4" />
+                          <StarRating rating={Number(item.rating)} readOnly size="h-4 w-4" />
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{item.rating} / 5 星</span>
                         </div>
+                        <p className="text-xs text-gray-400 mt-1">{new Date(item.ratingTime).toLocaleDateString('zh-CN')}</p>
                       </div>
                     </div>
-                    <button className="border border-gray-400 text-gray-600 dark:border-gray-500 dark:text-gray-300 font-semibold py-1 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-xs">
-                      取消评分
+                    <button
+                      onClick={() => handleCancelRating(item.ratingId, item.clubId)}
+                      disabled={cancellingRatingId === item.ratingId}
+                      className="flex-shrink-0 border border-red-500 text-red-500 font-semibold py-1 px-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {cancellingRatingId === item.ratingId ? '取消中...' : '取消评分'}
                     </button>
                   </div>
                 ))}

@@ -18,10 +18,8 @@ const ForgotPasswordPage: React.FC = () => {
       alert('请先填写手机号 / 邮箱');
       return;
     }
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendCode`, {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendCode?contact=${encodeURIComponent(contact)}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contact }),
     });
     const data = await res.json();
     if (data.code !== 200) {
