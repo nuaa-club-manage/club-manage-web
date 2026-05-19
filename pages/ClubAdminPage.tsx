@@ -9,6 +9,7 @@ import { getPendingMemberApplications, auditMemberApplication } from '../service
 import type { PendingMemberApplication } from '../services/memberApi';
 import { getClubActivities, updateActivity, endActivity, deleteActivity, getActivityParticipants } from '../services/activityApi';
 import type { ApiActivity, ActivityParticipant } from '../services/activityApi';
+import { fetchUserInfoById } from '../services/userApi';
 import MemberInfoModal from '../components/MemberInfoModal';
 import type { PersonInfo } from '../components/MemberInfoModal';
 
@@ -446,12 +447,25 @@ const ClubAdminPage: React.FC = () => {
               ) : records.length === 0 ? (
                 <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-400">暂无待审核的报名记录</td></tr>
               ) : records.map(record => (
-                <tr key={record.registrationId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer" onClick={() => setSelectedPerson({
-                  userId: record.userId,
-                  realName: record.realName,
-                  phoneNumber: record.phoneNumber,
-                  clubName: record.title,
-                })}>
+                <tr key={record.registrationId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer" onClick={async () => {
+                  try {
+                    const info = await fetchUserInfoById(record.userId);
+                    setSelectedPerson({
+                      userId: info.userId,
+                      userName: info.userName,
+                      realName: info.realName || undefined,
+                      school: info.school || undefined,
+                      degree: info.degree || undefined,
+                      phoneNumber: info.phoneNumber,
+                    });
+                  } catch {
+                    setSelectedPerson({
+                      userId: record.userId,
+                      realName: record.realName,
+                      phoneNumber: record.phoneNumber,
+                    });
+                  }
+                }}>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{record.title}</td>
                   <td className="px-6 py-4">{record.userId}</td>
                   <td className="px-6 py-4">{record.realName}</td>
@@ -513,7 +527,7 @@ const ClubAdminPage: React.FC = () => {
                 <div className="lg:w-1/2">
                   <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-xl">
                     <h3 className="text-lg font-bold mb-3">关于活动</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                       {detailActivity.content || '暂无简介'}
                     </p>
                   </div>
@@ -593,7 +607,25 @@ const ClubAdminPage: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                     {participants.map((p, idx) => (
-                      <tr key={p.userId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <tr key={p.userId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer" onClick={async () => {
+                        try {
+                          const info = await fetchUserInfoById(p.userId);
+                          setSelectedPerson({
+                            userId: info.userId,
+                            userName: info.userName,
+                            realName: info.realName || undefined,
+                            school: info.school || undefined,
+                            degree: info.degree || undefined,
+                            phoneNumber: info.phoneNumber,
+                          });
+                        } catch {
+                          setSelectedPerson({
+                            userId: p.userId,
+                            realName: p.realName,
+                            phoneNumber: p.phoneNumber,
+                          });
+                        }
+                      }}>
                         <td className="px-6 py-3 text-gray-400">{idx + 1}</td>
                         <td className="px-6 py-3 font-medium text-gray-900 dark:text-white">{p.realName}</td>
                         <td className="px-6 py-3">{p.userId}</td>

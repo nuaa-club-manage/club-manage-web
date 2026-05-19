@@ -16,6 +16,15 @@ export async function fetchUserInfo(): Promise<UserInfo> {
   return json.data as UserInfo;
 }
 
+export async function fetchUserInfoById(userId: string): Promise<UserInfo> {
+  const res = await fetch(`${BASE_URL}/api/user/info/${userId}`, {
+    headers: getAuthHeader(),
+  });
+  const json = await res.json();
+  if (json.code !== 200) throw new Error(json.message);
+  return json.data as UserInfo;
+}
+
 export async function updateUserInfo(data: UpdateUserInfoRequest): Promise<string> {
   const res = await fetch(`${BASE_URL}/api/user/info`, {
     method: 'PUT',
