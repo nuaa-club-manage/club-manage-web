@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { mockClubs, mockUser } from '../data/mockData';
 import { UsersIcon, CogIcon } from '../components/icons';
 import StarRating from '../components/StarRating';
+import Avatar from '../components/Avatar';
 import { submitRating, getMyClubRating, getClubAverageScores, cancelRating } from '../services/ratingApi';
 import type { MyRatingRecord, ClubAverageScore } from '../services/ratingApi';
 import { getClubDetail } from '../services/clubApi';
 import type { ApiClub } from '../services/clubApi';
-import { joinClub, leaveClub, getMyClubApplications } from '../services/memberApi';
+import { joinClub, leaveClub, getMyClubApplications, getMemberCount } from '../services/memberApi';
 
 const ClubDetailPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
@@ -30,6 +31,7 @@ const ClubDetailPage: React.FC = () => {
   const [myClubRating, setMyClubRating] = useState<MyRatingRecord | null>(null);
   const [cancellingRating, setCancellingRating] = useState(false);
   const [clubAverageScore, setClubAverageScore] = useState<ClubAverageScore | null>(null);
+  const [memberCount, setMemberCount] = useState(0);
 
   useEffect(() => {
     if (mockClub || !clubId) return;
@@ -37,6 +39,9 @@ const ClubDetailPage: React.FC = () => {
       .then(setApiClub)
       .catch(() => setClubNotFound(true))
       .finally(() => setLoadingClub(false));
+    getMemberCount(clubId)
+      .then(count => setMemberCount(count))
+      .catch(() => {});
   }, [clubId]);
 
   useEffect(() => {
@@ -76,7 +81,7 @@ const ClubDetailPage: React.FC = () => {
   const displayImage = mockClub
     ? mockClub.imageUrl
     : `https://picsum.photos/seed/${apiClub!.clubId}/600/400`;
-  const displayMemberCount = mockClub ? mockClub.memberCount : 0;
+  const displayMemberCount = mockClub ? mockClub.memberCount : memberCount;
   const displayRatingScore = clubAverageScore
     ? clubAverageScore.averageScore
     : (mockClub ? mockClub.rating.score : 0);
@@ -197,7 +202,7 @@ const ClubDetailPage: React.FC = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     {mockClub.members.map(member => (
                       <div key={member.id} className="flex flex-col items-center text-center space-y-2">
-                        <img src={member.avatarUrl} alt={member.name} className="w-16 h-16 rounded-full" />
+                        <Avatar name={member.name} src={member.avatarUrl} size={64} />
                         <p className="font-semibold text-sm">{member.name}</p>
                       </div>
                     ))}

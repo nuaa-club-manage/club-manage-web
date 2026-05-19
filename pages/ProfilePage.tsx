@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { mockUser } from '../data/mockData';
 import { Link } from 'react-router-dom';
+import Avatar from '../components/Avatar';
 import { UsersIcon, CalendarIcon, ArrowRightIcon, StarRatingIcon, LockClosedIcon } from '../components/icons';
 import StarRating from '../components/StarRating';
 import { fetchUserInfo } from '../services/userApi';
@@ -97,7 +98,7 @@ const ProfilePage: React.FC = () => {
         {/* Left Sidebar - Profile Info */}
         <aside className="lg:w-1/3 xl:w-1/4">
           <div className="sticky top-20 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
-            <img src={mockUser.avatarUrl} alt={userInfo?.userName ?? mockUser.name} className="w-28 h-28 mx-auto rounded-full border-4 border-indigo-500 mb-4" />
+            <Avatar name={userInfo?.userName ?? mockUser.name} src={mockUser.avatarUrl} size={112} className="mx-auto border-4 border-indigo-500 mb-4" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{userInfo?.realName ?? userInfo?.userName ?? mockUser.name}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">学号：{userInfo?.userId ?? '—'}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">{userInfo?.userMailbox ?? userInfo?.phoneNumber ?? mockUser.email}</p>

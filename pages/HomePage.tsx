@@ -7,6 +7,7 @@ import { getClubAverageScores } from '../services/ratingApi';
 import type { ClubAverageScore } from '../services/ratingApi';
 import { getClubs } from '../services/clubApi';
 import type { ApiClub } from '../services/clubApi';
+import { getMemberCountMap } from '../services/clubApi';
 import type { Club, Activity } from '../types';
 import { getPublishedActivities, apiActivityToActivity } from '../services/activityApi';
 
@@ -33,7 +34,11 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     getClubs()
-      .then(data => setFeaturedClubs(data.slice(0, 4).map(apiClubToClub)))
+      .then(async (data) => {
+        const clubs = data.slice(0, 4);
+        const memberCountMap = await getMemberCountMap(clubs.map(c => c.clubId));
+        setFeaturedClubs(clubs.map(c => ({ ...apiClubToClub(c), memberCount: memberCountMap[c.clubId] ?? 0 })));
+      })
       .catch(() => {});
     getClubAverageScores()
       .then(setAverageScores)

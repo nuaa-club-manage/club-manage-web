@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockClubs, mockUser } from '../data/mockData';
 import type { Club, ClubMember } from '../types';
+import Avatar from '../components/Avatar';
 
 const ManageClubPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
@@ -84,7 +85,7 @@ const ManageClubPage: React.FC = () => {
                 {club.joinRequests.map(request => (
                     <div key={request.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div className="flex items-center space-x-4">
-                            <img src={request.avatarUrl} alt={request.name} className="w-12 h-12 rounded-full" />
+                            <Avatar name={request.name} src={request.avatarUrl} size={48} />
                             <p className="font-semibold">{request.name}</p>
                         </div>
                         <div className="flex space-x-3">

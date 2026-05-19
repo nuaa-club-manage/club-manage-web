@@ -7,8 +7,10 @@ import type { RegistrationRecord } from '../types';
 import { PlusCircleIcon } from '../components/icons';
 import { getPendingMemberApplications, auditMemberApplication } from '../services/memberApi';
 import type { PendingMemberApplication } from '../services/memberApi';
-import { getMyActivities, updateActivity, endActivity, deleteActivity } from '../services/activityApi';
+import { getClubActivities, updateActivity, endActivity, deleteActivity } from '../services/activityApi';
 import type { ApiActivity } from '../services/activityApi';
+import MemberInfoModal from '../components/MemberInfoModal';
+import type { PersonInfo } from '../components/MemberInfoModal';
 
 const ClubAdminPage: React.FC = () => {
   const [records, setRecords] = useState<RegistrationRecord[]>([]);
@@ -21,8 +23,8 @@ const ClubAdminPage: React.FC = () => {
   const [memberApplications, setMemberApplications] = useState<PendingMemberApplication[]>([]);
   const [memberAppLoading, setMemberAppLoading] = useState(true);
   const [auditingMember, setAuditingMember] = useState<string | null>(null);
-  const [myActivities, setMyActivities] = useState<ApiActivity[]>([]);
-  const [activitiesLoading, setActivitiesLoading] = useState(true);
+  const [allActivities, setAllActivities] = useState<ApiActivity[]>([]);
+  const [allActivitiesLoading, setAllActivitiesLoading] = useState(true);
   const [editingActivity, setEditingActivity] = useState<ApiActivity | null>(null);
   const [activityForm, setActivityForm] = useState({ title: '', content: '', location: '', capacityLimit: '' });
   const [updatingActivity, setUpdatingActivity] = useState(false);
@@ -33,6 +35,7 @@ const ClubAdminPage: React.FC = () => {
   const [editingClub, setEditingClub] = useState<ApiClub | null>(null);
   const [editForm, setEditForm] = useState({ clubName: '', clubInformation: '', school: '' });
   const [updating, setUpdating] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<PersonInfo | null>(null);
 
   useEffect(() => {
     getManagedClubs()
@@ -45,17 +48,29 @@ const ClubAdminPage: React.FC = () => {
       .catch(() => setMemberApplications([]))
       .finally(() => setMemberAppLoading(false));
 
-    getMyActivities()
-      .then(setMyActivities)
-      .catch(() => setMyActivities([]))
-      .finally(() => setActivitiesLoading(false));
-
     setLoading(true);
     getRegistrationList()
       .then(setRecords)
       .catch((err: any) => setError(err.message ?? '加载失败'))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (clubs.length === 0) {
+      setAllActivities([]);
+      setAllActivitiesLoading(false);
+      return;
+    }
+    setAllActivitiesLoading(true);
+    Promise.all(clubs.map(c => getClubActivities(c.clubId)))
+      .then(results => {
+        const merged = new Map<string, ApiActivity>();
+        results.forEach(arr => arr.forEach(a => merged.set(a.activityId, a)));
+        setAllActivities(Array.from(merged.values()));
+      })
+      .catch(() => setAllActivities([]))
+      .finally(() => setAllActivitiesLoading(false));
+  }, [clubs]);
 
   const handleAuditMember = async (app: PendingMemberApplication, pass: boolean) => {
     setAuditingMember(app.userId);
@@ -117,7 +132,7 @@ const ClubAdminPage: React.FC = () => {
         parseInt(activityForm.capacityLimit),
       );
       alert(msg || '活动信息修改成功');
-      setMyActivities(prev => prev.map(a =>
+      setAllActivities(prev => prev.map(a =>
         a.activityId === editingActivity.activityId
           ? { ...a, title: activityForm.title, content: activityForm.content, location: activityForm.location, capacityLimit: parseInt(activityForm.capacityLimit) }
           : a
@@ -135,7 +150,7 @@ const ClubAdminPage: React.FC = () => {
     try {
       const msg = await endActivity(endingActivity.activityId, endForm.summary, endForm.participantList);
       alert(msg || '活动已结束');
-      setMyActivities(prev => prev.map(a =>
+      setAllActivities(prev => prev.map(a =>
         a.activityId === endingActivity.activityId ? { ...a, activityState: '已结束' } : a
       ));
       setEndingActivity(null);
@@ -151,7 +166,7 @@ const ClubAdminPage: React.FC = () => {
     try {
       const msg = await deleteActivity(a.activityId);
       alert(msg || '活动已删除');
-      setMyActivities(prev => prev.filter(item => item.activityId !== a.activityId));
+      setAllActivities(prev => prev.filter(item => item.activityId !== a.activityId));
     } catch (err: any) {
       alert(err.message ?? '删除失败，请重试');
     }
@@ -242,10 +257,10 @@ const ClubAdminPage: React.FC = () => {
         )}
       </div>
 
-      {/* 我发布的活动 */}
+      {/* 社团活动管理 */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">我发布的活动</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">社团活动管理</h2>
           <Link
             to="/activities/publish"
             className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
@@ -268,11 +283,11 @@ const ClubAdminPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {activitiesLoading ? (
+              {allActivitiesLoading ? (
                 <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-400">加载中...</td></tr>
-              ) : myActivities.length === 0 ? (
-                <tr><td colSpan={7} className="px-6 py-10 text-center text-gray-400">暂无发布的活动</td></tr>
-              ) : myActivities.map(a => (
+              ) : allActivities.length === 0 ? (
+                <tr><td colSpan={7} className="px-6 py-10 text-center text-gray-400">暂无活动</td></tr>
+              ) : allActivities.map(a => (
                 <tr key={a.activityId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{a.title}</td>
                   <td className="px-6 py-4">{a.clubName}</td>
@@ -294,18 +309,22 @@ const ClubAdminPage: React.FC = () => {
                       >
                         修改信息
                       </button>
-                      <button
-                        onClick={() => { setEndingActivity(a); setEndForm({ summary: '', participantList: '' }); }}
-                        className="bg-gray-600 hover:bg-gray-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors"
-                      >
-                        结束活动
-                      </button>
-                      <button
-                        onClick={() => handleDeleteActivity(a)}
-                        className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors"
-                      >
-                        删除活动
-                      </button>
+                      {a.activityState !== '已结束' && (
+                        <button
+                          onClick={() => { setEndingActivity(a); setEndForm({ summary: '', participantList: '' }); }}
+                          className="bg-gray-600 hover:bg-gray-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors"
+                        >
+                          结束活动
+                        </button>
+                      )}
+                      {a.activityState !== '已结束' && (
+                        <button
+                          onClick={() => handleDeleteActivity(a)}
+                          className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors"
+                        >
+                          删除活动
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -338,13 +357,20 @@ const ClubAdminPage: React.FC = () => {
               ) : memberApplications.length === 0 ? (
                 <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-400">暂无待审核的入社申请</td></tr>
               ) : memberApplications.map(app => (
-                <tr key={app.userId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <tr key={app.userId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer" onClick={() => setSelectedPerson({
+                  userId: app.userId,
+                  userName: app.userName,
+                  realName: app.realName,
+                  school: app.school,
+                  degree: app.degree,
+                  clubName: app.clubName,
+                })}>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{app.realName || '-'}</td>
                   <td className="px-6 py-4">{app.userName}</td>
                   <td className="px-6 py-4">{app.studentId || '-'}</td>
                   <td className="px-6 py-4">{app.school || '-'}</td>
                   <td className="px-6 py-4">{app.clubName}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleAuditMember(app, true)}
@@ -395,7 +421,12 @@ const ClubAdminPage: React.FC = () => {
               ) : records.length === 0 ? (
                 <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-400">暂无待审核的报名记录</td></tr>
               ) : records.map(record => (
-                <tr key={record.registrationId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <tr key={record.registrationId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer" onClick={() => setSelectedPerson({
+                  userId: record.userId,
+                  realName: record.realName,
+                  phoneNumber: record.phoneNumber,
+                  clubName: record.title,
+                })}>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{record.title}</td>
                   <td className="px-6 py-4">{record.userId}</td>
                   <td className="px-6 py-4">{record.realName}</td>
@@ -405,7 +436,7 @@ const ClubAdminPage: React.FC = () => {
                       {record.reviewState}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleAudit(record.registrationId, true)}
@@ -596,6 +627,10 @@ const ClubAdminPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedPerson && (
+        <MemberInfoModal person={selectedPerson} onClose={() => setSelectedPerson(null)} />
       )}
     </div>
   );

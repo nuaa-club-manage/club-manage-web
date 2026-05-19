@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getClubMembers } from '../services/memberApi';
 import type { ClubMember } from '../services/memberApi';
+import MemberInfoModal from '../components/MemberInfoModal';
+import type { PersonInfo } from '../components/MemberInfoModal';
 
 const ClubMembersPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [clubName, setClubName] = useState('');
+  const [selectedPerson, setSelectedPerson] = useState<PersonInfo | null>(null);
 
   useEffect(() => {
     if (!clubId) return;
@@ -53,7 +56,19 @@ const ClubMembersPage: React.FC = () => {
               </thead>
               <tbody>
                 {members.map((m, idx) => (
-                  <tr key={m.userId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                  <tr
+                    key={m.userId}
+                    className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                    onClick={() => setSelectedPerson({
+                      userId: m.userId,
+                      userName: m.userName,
+                      realName: m.realName,
+                      school: m.school,
+                      degree: m.degree,
+                      phoneNumber: m.phoneNumber,
+                      role: m.clubManager === 'true' || m.clubManager === '1' || m.clubManager === '是' ? '管理员' : '普通成员',
+                    })}
+                  >
                     <td className="px-6 py-4 text-gray-400">{idx + 1}</td>
                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{m.userId}</td>
                     <td className="px-6 py-4">{m.userName}</td>
@@ -62,7 +77,7 @@ const ClubMembersPage: React.FC = () => {
                     <td className="px-6 py-4">{m.degree || '-'}</td>
                     <td className="px-6 py-4">{m.phoneNumber || '-'}</td>
                     <td className="px-6 py-4">
-                      {m.clubManager === 'true' || m.clubManager === '1' ? (
+                      {m.clubManager === 'true' || m.clubManager === '1' || m.clubManager === '是' ? (
                         <span className="px-2 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">管理员</span>
                       ) : (
                         <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">普通成员</span>
@@ -75,6 +90,9 @@ const ClubMembersPage: React.FC = () => {
           </div>
         )}
       </div>
+      {selectedPerson && (
+        <MemberInfoModal person={selectedPerson} onClose={() => setSelectedPerson(null)} />
+      )}
     </div>
   );
 };

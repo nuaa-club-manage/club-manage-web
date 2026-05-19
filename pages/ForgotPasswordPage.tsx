@@ -105,7 +105,7 @@ const ForgotPasswordPage: React.FC = () => {
                 autoComplete="one-time-code"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 pl-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                placeholder="短信验证码"
+                placeholder="验证码"
               />
               <button
                 type="button"
@@ -113,7 +113,7 @@ const ForgotPasswordPage: React.FC = () => {
                 disabled={smsCountdown > 0}
                 className={`flex-shrink-0 px-3 py-3 border border-l-0 border-gray-300 text-xs font-medium whitespace-nowrap transition-colors dark:border-gray-600 ${smsCountdown > 0 ? 'bg-gray-800 text-white cursor-not-allowed' : 'bg-white text-indigo-600 hover:bg-indigo-50 dark:bg-gray-700 dark:text-indigo-400 dark:hover:bg-gray-600'}`}
               >
-                {smsCountdown > 0 ? `${smsCountdown}秒后重试` : '获取短信验证码'}
+                {smsCountdown > 0 ? `${smsCountdown}秒后重试` : '获取验证码'}
               </button>
             </div>
 

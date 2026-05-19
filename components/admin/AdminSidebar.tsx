@@ -16,7 +16,6 @@ const AdminSidebar: React.FC = () => {
     { to: '/admin/dashboard', text: '仪表盘', icon: DashboardIcon },
     { to: '/admin/users', text: '用户管理', icon: UsersIcon },
     { to: '/admin/club-list', text: '社团列表', icon: ClubIcon },
-    { to: '/admin/club-members', text: '所有社团成员', icon: UsersIcon },
     { to: '/admin/activity-list', text: '活动列表', icon: CalendarIcon },
     { to: '/admin/clubs', text: '社团审核', icon: ClubIcon },
     { to: '/admin/activities', text: '活动审核', icon: CalendarIcon },

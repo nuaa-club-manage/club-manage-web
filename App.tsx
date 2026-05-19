@@ -27,7 +27,6 @@ import AdminEditUserPage from './pages/admin/AdminEditUserPage';
 import AdminClubApprovalPage from './pages/admin/AdminClubApprovalPage';
 import AdminActivityApprovalPage from './pages/admin/AdminActivityApprovalPage';
 import AdminClubListPage from './pages/admin/AdminClubListPage';
-import AdminClubMembersPage from './pages/admin/AdminClubMembersPage';
 import AdminActivityListPage from './pages/admin/AdminActivityListPage';
 import PageIndexPage from './pages/PageIndexPage';
 
@@ -40,7 +39,8 @@ const App: React.FC = () => {
   const AppRoutes = (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/home" element={<HomePage />} />
       <Route path="/clubs" element={<ClubListPage />} />
       <Route path="/clubs/create" element={<CreateClubPage />} />
       <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
@@ -69,7 +69,6 @@ const App: React.FC = () => {
       <Route path="/admin/users/edit" element={<AdminEditUserPage />} />
       <Route path="/admin/clubs" element={<AdminClubApprovalPage />} />
       <Route path="/admin/club-list" element={<AdminClubListPage />} />
-      <Route path="/admin/club-members" element={<AdminClubMembersPage />} />
       <Route path="/admin/activity-list" element={<AdminActivityListPage />} />
       <Route path="/admin/activities" element={<AdminActivityApprovalPage />} />
     </Routes>

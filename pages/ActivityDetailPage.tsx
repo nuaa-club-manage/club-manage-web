@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { mockActivities } from '../data/mockData';
-import { CalendarIcon, ClockIcon, LocationMarkerIcon, ClubIcon } from '../components/icons';
+import { CalendarIcon, LocationMarkerIcon, ClubIcon } from '../components/icons';
 import ApplicationModal from '../components/ApplicationModal';
 import { registerActivity, cancelRegistration, getMyRegistrations, getActivityDetail } from '../services/activityApi';
 import type { ApiActivity } from '../services/activityApi';
@@ -65,9 +65,6 @@ const ActivityDetailPage: React.FC = () => {
     : apiActivity!.publishTime
       ? new Date(apiActivity!.publishTime).toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
       : '-';
-  const displayTime = mockActivity
-    ? mockActivity.time
-    : apiActivity!.publishTime ? apiActivity!.publishTime.slice(11, 16) : '-';
   const realActivityId = mockActivity ? String(mockActivity.id) : apiActivity!.activityId;
 
   const handleRegistrationSubmit = async (formData: { realName: string; phoneNumber: string }) => {
@@ -129,14 +126,7 @@ const ActivityDetailPage: React.FC = () => {
                     <CalendarIcon className="w-7 h-7 text-indigo-500 flex-shrink-0" />
                     <div>
                       <p className="font-bold text-lg">{displayDate}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">日期</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <ClockIcon className="w-7 h-7 text-indigo-500 flex-shrink-0" />
-                    <div>
-                      <p className="font-bold text-lg">{displayTime}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">时间</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">发布日期</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">

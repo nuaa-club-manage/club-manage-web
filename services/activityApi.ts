@@ -39,7 +39,9 @@ export function apiActivityToActivity(a: ApiActivity): Activity {
 
 export async function getPublishedActivities(title?: string): Promise<ApiActivity[]> {
   const params = title ? `?title=${encodeURIComponent(title)}` : '';
-  const res = await fetch(`${BASE_URL}/api/activities${params}`);
+  const res = await fetch(`${BASE_URL}/api/activities${params}`, {
+    headers: getAuthHeader(),
+  });
   const json = await res.json();
   if (json.code !== undefined && json.code !== 200) throw new Error(json.message);
   if (!Array.isArray(json.data)) return [];
@@ -47,7 +49,9 @@ export async function getPublishedActivities(title?: string): Promise<ApiActivit
 }
 
 export async function getActivityDetail(activityId: string): Promise<ApiActivity> {
-  const res = await fetch(`${BASE_URL}/api/activities/detail?activityId=${encodeURIComponent(activityId)}`);
+  const res = await fetch(`${BASE_URL}/api/activities/detail?activityId=${encodeURIComponent(activityId)}`, {
+    headers: getAuthHeader(),
+  });
   const json = await res.json();
   if (json.code !== undefined && json.code !== 200) throw new Error(json.message ?? '活动不存在');
   if (!json.data) throw new Error('活动不存在');
@@ -56,6 +60,16 @@ export async function getActivityDetail(activityId: string): Promise<ApiActivity
 
 export async function getMyActivities(): Promise<ApiActivity[]> {
   const res = await fetch(`${BASE_URL}/api/activities/my`, {
+    headers: getAuthHeader(),
+  });
+  const json = await res.json();
+  if (json.code !== undefined && json.code !== 200) throw new Error(json.message);
+  if (!Array.isArray(json.data)) return [];
+  return json.data as ApiActivity[];
+}
+
+export async function getClubActivities(clubId: string): Promise<ApiActivity[]> {
+  const res = await fetch(`${BASE_URL}/api/activities/club?clubId=${encodeURIComponent(clubId)}`, {
     headers: getAuthHeader(),
   });
   const json = await res.json();

@@ -17,15 +17,36 @@ export interface ApiClub {
 
 export async function getClubs(clubName?: string): Promise<ApiClub[]> {
   const params = clubName ? `?clubName=${encodeURIComponent(clubName)}` : '';
-  const res = await fetch(`${BASE_URL}/api/club/list${params}`);
+  const res = await fetch(`${BASE_URL}/api/club/list${params}`, {
+    headers: getAuthHeader(),
+  });
   const json = await res.json();
   if (json.code !== undefined && json.code !== 200) throw new Error(json.message);
   if (!Array.isArray(json.data)) return [];
   return json.data as ApiClub[];
 }
 
+/** 批量获取每个社团的成员数，返回 Map<clubId, count> */
+export async function getMemberCountMap(clubIds: string[]): Promise<Record<string, number>> {
+  const results: Record<string, number> = {};
+  const counts = await Promise.all(
+    clubIds.map(async (clubId) => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/member/count?clubId=${encodeURIComponent(clubId)}`);
+        const json = await res.json();
+        if (json.code === 200 && typeof json.data === 'number') return { clubId, count: json.data };
+      } catch (_) {}
+      return { clubId, count: 0 };
+    })
+  );
+  counts.forEach(({ clubId, count }) => { results[clubId] = count; });
+  return results;
+}
+
 export async function getClubDetail(clubId: string): Promise<ApiClub> {
-  const res = await fetch(`${BASE_URL}/api/club/detail?clubId=${encodeURIComponent(clubId)}`);
+  const res = await fetch(`${BASE_URL}/api/club/detail?clubId=${encodeURIComponent(clubId)}`, {
+    headers: getAuthHeader(),
+  });
   const json = await res.json();
   if (json.code !== undefined && json.code !== 200) throw new Error(json.message ?? '获取社团详情失败');
   if (!json.data) throw new Error('社团不存在');

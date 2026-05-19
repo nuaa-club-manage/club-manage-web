@@ -91,6 +91,14 @@ export async function joinClub(clubId: string): Promise<string> {
   return json.data as string;
 }
 
+/** 公开查询社团成员数量 */
+export async function getMemberCount(clubId: string): Promise<number> {
+  const res = await fetch(`${BASE_URL}/api/member/count?clubId=${encodeURIComponent(clubId)}`);
+  const json = await res.json();
+  if (json.code !== 200) return 0;
+  return json.data as number;
+}
+
 export async function leaveClub(clubId: string): Promise<string> {
   const res = await fetch(`${BASE_URL}/api/member/leave`, {
     method: 'DELETE',

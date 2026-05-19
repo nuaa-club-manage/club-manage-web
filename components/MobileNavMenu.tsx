@@ -12,7 +12,7 @@ const MobileNavMenu: React.FC<MobileNavMenuProps> = ({ isOpen, onClose }) => {
     {
       title: "主要页面",
       links: [
-        { path: "/", name: "主页" },
+        { path: "/home", name: "主页" },
         { path: "/clubs", name: "社团列表" },
         { path: "/activities", name: "活动列表" },
         { path: "/club-admin", name: "社团管理" },
@@ -64,7 +64,7 @@ const MobileNavMenu: React.FC<MobileNavMenuProps> = ({ isOpen, onClose }) => {
         aria-modal="true"
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <Link to="/" onClick={onClose} className="flex items-center space-x-2 text-lg font-bold text-gray-800 dark:text-gray-200">
+          <Link to="/home" onClick={onClose} className="flex items-center space-x-2 text-lg font-bold text-gray-800 dark:text-gray-200">
              <NuaaLogoIcon className="w-8 h-8"/>
              <span>社团管理</span>
           </Link>

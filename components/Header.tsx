@@ -32,7 +32,7 @@ const Header: React.FC = () => {
               >
                 <MenuIcon className="w-6 h-6" />
               </button>
-              <Link to="/" className="flex items-center space-x-2 text-lg font-bold text-gray-800 dark:text-gray-200">
+              <Link to="/home" className="flex items-center space-x-2 text-lg font-bold text-gray-800 dark:text-gray-200">
                 <NuaaLogoIcon className="w-10 h-10 text-gray-700 dark:text-gray-300"/>
                 <div className="hidden sm:flex flex-col">
                     <span className="text-xs font-medium">南京航空航天大学</span>
@@ -42,7 +42,7 @@ const Header: React.FC = () => {
             </div>
             
             <nav className="hidden md:flex items-center space-x-4">
-              <NavLink to="/" className={navLinkClass}>主页</NavLink>
+              <NavLink to="/home" className={navLinkClass}>主页</NavLink>
               <NavLink to="/clubs" className={navLinkClass}>社团列表</NavLink>
               <NavLink to="/activities" className={navLinkClass}>活动列表</NavLink>
               <NavLink to="/club-admin" className={navLinkClass}>社团管理</NavLink>

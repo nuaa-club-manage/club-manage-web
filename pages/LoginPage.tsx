@@ -56,7 +56,7 @@ const LoginPage: React.FC = () => {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchCaptcha = useCallback(async () => {
-    const res = await fetch('https://m1.apifoxmock.com/m1/8227292-7987577-default/api/user/captcha');
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/captcha`);
     const json = await res.json();
     setCaptchaId(json.data.captchaId);
     setCaptchaText(json.data.captchaText);
@@ -82,7 +82,7 @@ const LoginPage: React.FC = () => {
     if (smsCountdown > 0) return;
     const credential = (document.getElementById('credential') as HTMLInputElement).value;
     if (!credential) {
-      alert('请先填写手机号');
+      alert('请先填写手机号或邮箱');
       return;
     }
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/sendCode?contact=${encodeURIComponent(credential)}`, {
@@ -139,7 +139,7 @@ const LoginPage: React.FC = () => {
     console.log(data);
     if (data.code === 200) {
       localStorage.setItem('token', data.data);
-      navigate(isAdministrator ? '/admin/dashboard' : '/');
+      navigate(isAdministrator ? '/admin/dashboard' : '/home');
     } else {
       alert(data.message);
       if (!isAdministrator) refreshCaptcha();
@@ -178,7 +178,7 @@ const LoginPage: React.FC = () => {
           <div className="rounded-md shadow-sm -space-y-px">
             {/* 账号输入框（始终显示） */}
             <div className="relative">
-              <label htmlFor="credential" className="sr-only">{useSmsLogin ? '手机号' : '学号'}</label>
+              <label htmlFor="credential" className="sr-only">账号</label>
               <UsersIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"/>
               <input
                 id="credential"
@@ -187,11 +187,11 @@ const LoginPage: React.FC = () => {
                 autoComplete="username"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 pl-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                placeholder={useSmsLogin ? '手机号' : '学号'}
+                placeholder={useSmsLogin ? '手机号/邮箱' : '账号'}
               />
             </div>
 
-            {/* 密码 或 短信验证码 */}
+            {/* 密码 或 验证码 */}
             {!isAdministrator && useSmsLogin ? (
               <div className="relative flex items-stretch">
                 <LockClosedIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10"/>
@@ -202,7 +202,7 @@ const LoginPage: React.FC = () => {
                   autoComplete="one-time-code"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 pl-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                  placeholder="短信验证码"
+                  placeholder="验证码"
                 />
                 <button
                   type="button"
@@ -210,7 +210,7 @@ const LoginPage: React.FC = () => {
                   disabled={smsCountdown > 0}
                   className={`flex-shrink-0 px-3 py-3 border border-l-0 border-gray-300 text-xs font-medium whitespace-nowrap transition-colors dark:border-gray-600 ${smsCountdown > 0 ? 'bg-gray-800 text-white cursor-not-allowed' : 'bg-white text-indigo-600 hover:bg-indigo-50 dark:bg-gray-700 dark:text-indigo-400 dark:hover:bg-gray-600'}`}
                 >
-                  {smsCountdown > 0 ? `${smsCountdown}秒后重试` : '获取短信验证码'}
+                  {smsCountdown > 0 ? `${smsCountdown}秒后重试` : '获取验证码'}
                 </button>
               </div>
             ) : (
@@ -255,16 +255,18 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
-              忘记密码?
-            </Link>
+            {!isAdministrator && (
+              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+                忘记密码?
+              </Link>
+            )}
             {!isAdministrator && (
               <button
                 type="button"
                 onClick={() => setUseSmsLogin(v => !v)}
                 className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
               >
-                {useSmsLogin ? '账号密码登录' : '短信验证码登录'}
+                {useSmsLogin ? '账号密码登录' : '验证码登录'}
               </button>
             )}
             {!isAdministrator && (

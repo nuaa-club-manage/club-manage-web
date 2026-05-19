@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { mockActivities } from '../data/mockData';
 import { getActivityParticipants } from '../services/activityApi';
 import type { ActivityParticipant } from '../services/activityApi';
+import MemberInfoModal from '../components/MemberInfoModal';
+import type { PersonInfo } from '../components/MemberInfoModal';
 
 const ActivityParticipantsPage: React.FC = () => {
   const { activityId } = useParams<{ activityId: string }>();
@@ -11,6 +13,7 @@ const ActivityParticipantsPage: React.FC = () => {
   const [participants, setParticipants] = useState<ActivityParticipant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<PersonInfo | null>(null);
 
   useEffect(() => {
     if (!activityId) return;
@@ -50,7 +53,11 @@ const ActivityParticipantsPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {participants.map((p, index) => (
-                <tr key={p.userId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <tr key={p.userId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer" onClick={() => setSelectedPerson({
+                  userId: p.userId,
+                  realName: p.realName,
+                  phoneNumber: p.phoneNumber,
+                })}>
                   <td className="px-6 py-4 text-gray-400">{index + 1}</td>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{p.realName}</td>
                   <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{p.userId}</td>
@@ -63,6 +70,9 @@ const ActivityParticipantsPage: React.FC = () => {
             共 {participants.length} 人报名
           </div>
         </div>
+      )}
+      {selectedPerson && (
+        <MemberInfoModal person={selectedPerson} onClose={() => setSelectedPerson(null)} />
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import { getClubAverageScores } from '../services/ratingApi';
 import type { ClubAverageScore } from '../services/ratingApi';
 import { getClubs } from '../services/clubApi';
 import type { ApiClub } from '../services/clubApi';
+import { getMemberCountMap } from '../services/clubApi';
 import type { Club } from '../types';
 
 function apiClubToClub(c: ApiClub): Club {
@@ -33,7 +34,10 @@ const ClubListPage: React.FC = () => {
   const fetchClubs = useCallback((query: string) => {
     setLoading(true);
     getClubs(query || undefined)
-      .then(data => setClubs(data.map(apiClubToClub)))
+      .then(async (data) => {
+        const memberCountMap = await getMemberCountMap(data.map(c => c.clubId));
+        setClubs(data.map(c => ({ ...apiClubToClub(c), memberCount: memberCountMap[c.clubId] ?? 0 })));
+      })
       .catch(() => setClubs([]))
       .finally(() => setLoading(false));
   }, []);
