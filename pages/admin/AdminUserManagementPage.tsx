@@ -75,7 +75,7 @@ const AdminUserManagementPage: React.FC = () => {
                 <th className="px-6 py-3">用户名</th>
                 <th className="px-6 py-3">真实姓名</th>
                 <th className="px-6 py-3">手机号</th>
-                <th className="px-6 py-3">学院</th>
+                <th className="px-6 py-3">学校</th>
                 <th className="px-6 py-3">注册时间</th>
                 <th className="px-6 py-3"><span className="sr-only">操作</span></th>
               </tr>

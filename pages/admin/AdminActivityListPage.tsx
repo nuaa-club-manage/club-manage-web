@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { SearchIcon, CalendarIcon, ClockIcon, LocationMarkerIcon, ClubIcon } from '../../components/icons';
+import { SearchIcon, CalendarIcon, LocationMarkerIcon, ClubIcon } from '../../components/icons';
 import { getPublishedActivities, getActivityDetail } from '../../services/activityApi';
 import type { ApiActivity } from '../../services/activityApi';
 
@@ -38,7 +38,6 @@ const AdminActivityListPage: React.FC = () => {
   const displayDate = detail?.publishTime
     ? new Date(detail.publishTime).toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
     : '-';
-  const displayTime = detail?.publishTime ? detail.publishTime.slice(11, 16) : '-';
 
   return (
     <div className="p-8">
@@ -166,14 +165,7 @@ const AdminActivityListPage: React.FC = () => {
                         <CalendarIcon className="w-6 h-6 text-indigo-500 flex-shrink-0" />
                         <div>
                           <p className="font-bold">{displayDate}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">日期</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <ClockIcon className="w-6 h-6 text-indigo-500 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold">{displayTime}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">时间</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">发布日期</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">

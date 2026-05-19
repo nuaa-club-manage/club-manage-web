@@ -1,21 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { updatePassword } from '../services/userApi';
-import { LockClosedIcon } from '../components/icons';
+import { LockClosedIcon, EyeIcon, EyeOffIcon } from '../components/icons';
 
 const ChangePasswordPage: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const validatePassword = (pwd: string) => {
+    if (pwd.length < 6 || pwd.length > 20) return '密码长度需为6-20位';
+    if (!/[a-zA-Z]/.test(pwd)) return '密码需同时包含字母和数字';
+    if (!/[0-9]/.test(pwd)) return '密码需同时包含字母和数字';
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {    e.preventDefault();
     if (formData.newPassword !== formData.confirmPassword) {
       alert('两次输入的新密码不一致');
+      return;
+    }
+    const pwdError = validatePassword(formData.newPassword);
+    if (pwdError) {
+      alert(pwdError);
       return;
     }
     setLoading(true);
@@ -31,7 +46,7 @@ const ChangePasswordPage: React.FC = () => {
     }
   };
 
-  const inputClass = "mt-1 block w-full px-3 py-2 pl-10 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-white";
+  const inputClass = "mt-1 block w-full px-3 py-2 pl-10 pr-10 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-white";
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -40,20 +55,29 @@ const ChangePasswordPage: React.FC = () => {
         <div className="relative">
           <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">旧密码</label>
           <LockClosedIcon className="absolute left-3 top-9 w-5 h-5 text-gray-400" />
-          <input id="oldPassword" name="oldPassword" type="password" required autoComplete="current-password"
+          <input id="oldPassword" name="oldPassword" type={showOld ? 'text' : 'password'} required autoComplete="current-password"
             value={formData.oldPassword} onChange={handleChange} className={inputClass} placeholder="请输入旧密码" />
+          <button type="button" onClick={() => setShowOld(v => !v)} className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            {showOld ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+          </button>
         </div>
         <div className="relative">
           <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">新密码</label>
           <LockClosedIcon className="absolute left-3 top-9 w-5 h-5 text-gray-400" />
-          <input id="newPassword" name="newPassword" type="password" required autoComplete="new-password"
-            value={formData.newPassword} onChange={handleChange} className={inputClass} placeholder="请输入新密码" />
+          <input id="newPassword" name="newPassword" type={showNew ? 'text' : 'password'} required autoComplete="new-password"
+            value={formData.newPassword} onChange={handleChange} className={inputClass} placeholder="请输入新密码（6-20位，需包含字母和数字）" />
+          <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            {showNew ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+          </button>
         </div>
         <div className="relative">
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">确认新密码</label>
           <LockClosedIcon className="absolute left-3 top-9 w-5 h-5 text-gray-400" />
-          <input id="confirmPassword" name="confirmPassword" type="password" required autoComplete="new-password"
+          <input id="confirmPassword" name="confirmPassword" type={showConfirm ? 'text' : 'password'} required autoComplete="new-password"
             value={formData.confirmPassword} onChange={handleChange} className={inputClass} placeholder="请再次输入新密码" />
+          <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            {showConfirm ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+          </button>
         </div>
         <div className="flex justify-end space-x-4 pt-2">
           <button type="button" onClick={() => navigate('/profile')}

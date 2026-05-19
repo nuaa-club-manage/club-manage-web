@@ -48,7 +48,7 @@ const ClubMembersPage: React.FC = () => {
                   <th className="px-6 py-3">学号</th>
                   <th className="px-6 py-3">用户名</th>
                   <th className="px-6 py-3">真实姓名</th>
-                  <th className="px-6 py-3">学院</th>
+                  <th className="px-6 py-3">学校</th>
                   <th className="px-6 py-3">学历</th>
                   <th className="px-6 py-3">联系电话</th>
                   <th className="px-6 py-3">身份</th>

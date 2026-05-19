@@ -42,7 +42,7 @@ const AdminClubApprovalPage: React.FC = () => {
             <div key={club.clubId} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{club.clubName}</h2>
-                <p className="text-sm font-semibold text-indigo-500 dark:text-indigo-400 mt-1">{club.school || '未填写学院'}</p>
+                <p className="text-sm font-semibold text-indigo-500 dark:text-indigo-400 mt-1">{club.school || '未填写学校'}</p>
                 <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm max-w-lg">{club.clubInformation || '暂无简介'}</p>
                 <p className="text-xs text-gray-400 mt-2">
                   申请时间：{club.establishmentTime ? new Date(club.establishmentTime).toLocaleString('zh-CN') : '-'}

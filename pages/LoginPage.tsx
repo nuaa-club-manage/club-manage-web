@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { NuaaLogoIcon, UsersIcon, LockClosedIcon } from '../components/icons';
+import { NuaaLogoIcon, UsersIcon, LockClosedIcon, EyeIcon, EyeOffIcon } from '../components/icons';
 
 function drawCaptcha(canvas: HTMLCanvasElement, text: string) {
   const ctx = canvas.getContext('2d')!;
@@ -49,6 +49,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [isAdministrator, setIsAdministrator] = useState(false);
   const [useSmsLogin, setUseSmsLogin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [captchaText, setCaptchaText] = useState('');
   const [captchaId, setCaptchaId] = useState('');
   const [smsCountdown, setSmsCountdown] = useState(0);
@@ -220,12 +221,15 @@ const LoginPage: React.FC = () => {
                 <input
                   id="password-sr"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className={`appearance-none rounded-none relative block w-full px-3 pl-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white ${isAdministrator ? 'rounded-b-md' : ''}`}
+                  className={`appearance-none rounded-none relative block w-full px-3 pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white ${isAdministrator ? 'rounded-b-md' : ''}`}
                   placeholder="密码"
                 />
+                <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 z-20">
+                  {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                </button>
               </div>
             )}
 

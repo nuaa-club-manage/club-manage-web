@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { NuaaLogoIcon, UsersIcon, LockClosedIcon } from '../components/icons';
+import { NuaaLogoIcon, UsersIcon, LockClosedIcon, EyeIcon, EyeOffIcon } from '../components/icons';
 
 const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
   const [smsCountdown, setSmsCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
@@ -38,6 +40,13 @@ const ForgotPasswordPage: React.FC = () => {
     }, 1000);
   };
 
+  const validatePassword = (pwd: string) => {
+    if (pwd.length < 6 || pwd.length > 20) return '密码长度需为6-20位';
+    if (!/[a-zA-Z]/.test(pwd)) return '密码需同时包含字母和数字';
+    if (!/[0-9]/.test(pwd)) return '密码需同时包含字母和数字';
+    return null;
+  };
+
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as HTMLFormElement;
@@ -45,6 +54,12 @@ const ForgotPasswordPage: React.FC = () => {
     const verifyCode = (form.elements.namedItem('verifyCode') as HTMLInputElement).value;
     const newPassword = (form.elements.namedItem('newPassword') as HTMLInputElement).value;
     const confirmPassword = (form.elements.namedItem('confirmPassword') as HTMLInputElement).value;
+
+    const pwdError = validatePassword(newPassword);
+    if (pwdError) {
+      alert(pwdError);
+      return;
+    }
 
     if (newPassword !== confirmPassword) {
       alert('两次输入的密码不一致');
@@ -124,12 +139,15 @@ const ForgotPasswordPage: React.FC = () => {
               <input
                 id="newPassword-forgot"
                 name="newPassword"
-                type="password"
+                type={showNewPassword ? 'text' : 'password'}
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 pl-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                placeholder="新密码"
+                className="appearance-none rounded-none relative block w-full px-3 pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                placeholder="新密码（6-20位，需包含字母和数字）"
               />
+              <button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                {showNewPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+              </button>
             </div>
 
             {/* 确认新密码 */}
@@ -139,12 +157,15 @@ const ForgotPasswordPage: React.FC = () => {
               <input
                 id="confirmPassword-forgot"
                 name="confirmPassword"
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 pl-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                className="appearance-none rounded-none relative block w-full px-3 pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                 placeholder="确认新密码"
               />
+              <button type="button" onClick={() => setShowConfirmPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                {showConfirmPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+              </button>
             </div>
 
           </div>

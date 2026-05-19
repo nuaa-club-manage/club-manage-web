@@ -4,11 +4,11 @@ import { getRegistrationList, auditRegistration } from '../services/activityApi'
 import { dissolveClub, getManagedClubs, updateClub } from '../services/clubApi';
 import type { ApiClub } from '../services/clubApi';
 import type { RegistrationRecord } from '../types';
-import { PlusCircleIcon } from '../components/icons';
+import { PlusCircleIcon, CalendarIcon, LocationMarkerIcon, ClubIcon } from '../components/icons';
 import { getPendingMemberApplications, auditMemberApplication } from '../services/memberApi';
 import type { PendingMemberApplication } from '../services/memberApi';
-import { getClubActivities, updateActivity, endActivity, deleteActivity } from '../services/activityApi';
-import type { ApiActivity } from '../services/activityApi';
+import { getClubActivities, updateActivity, endActivity, deleteActivity, getActivityParticipants } from '../services/activityApi';
+import type { ApiActivity, ActivityParticipant } from '../services/activityApi';
 import MemberInfoModal from '../components/MemberInfoModal';
 import type { PersonInfo } from '../components/MemberInfoModal';
 
@@ -36,6 +36,10 @@ const ClubAdminPage: React.FC = () => {
   const [editForm, setEditForm] = useState({ clubName: '', clubInformation: '', school: '' });
   const [updating, setUpdating] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<PersonInfo | null>(null);
+  const [participantsActivity, setParticipantsActivity] = useState<ApiActivity | null>(null);
+  const [participants, setParticipants] = useState<ActivityParticipant[]>([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [detailActivity, setDetailActivity] = useState<ApiActivity | null>(null);
 
   useEffect(() => {
     getManagedClubs()
@@ -114,6 +118,21 @@ const ClubAdminPage: React.FC = () => {
 
   const openEdit = (club: ApiClub) => {    setEditingClub(club);
     setEditForm({ clubName: club.clubName, clubInformation: club.clubInformation || '', school: club.school || '' });
+  };
+
+  const openParticipants = async (a: ApiActivity) => {
+    setParticipantsActivity(a);
+    setParticipants([]);
+    setParticipantsLoading(true);
+    try {
+      const data = await getActivityParticipants(a.activityId);
+      setParticipants(data);
+    } catch (err: any) {
+      alert(err.message ?? '加载报名信息失败');
+      setParticipantsActivity(null);
+    } finally {
+      setParticipantsLoading(false);
+    }
   };
 
   const openEditActivity = (a: ApiActivity) => {
@@ -216,7 +235,7 @@ const ClubAdminPage: React.FC = () => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th className="px-6 py-3">社团名称</th>
-                <th className="px-6 py-3">所属学院</th>
+                <th className="px-6 py-3">所属学校</th>
                 <th className="px-6 py-3">社团简介</th>
                 <th className="px-6 py-3">操作</th>
               </tr>
@@ -288,7 +307,7 @@ const ClubAdminPage: React.FC = () => {
               ) : allActivities.length === 0 ? (
                 <tr><td colSpan={7} className="px-6 py-10 text-center text-gray-400">暂无活动</td></tr>
               ) : allActivities.map(a => (
-                <tr key={a.activityId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <tr key={a.activityId} className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer" onClick={() => setDetailActivity(a)}>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{a.title}</td>
                   <td className="px-6 py-4">{a.clubName}</td>
                   <td className="px-6 py-4">{a.location || '-'}</td>
@@ -301,8 +320,14 @@ const ClubAdminPage: React.FC = () => {
                   <td className="px-6 py-4">
                     {a.publishTime ? new Date(a.publishTime).toLocaleDateString('zh-CN') : '-'}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-2">
+                      <button
+                        onClick={() => openParticipants(a)}
+                        className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors"
+                      >
+                        报名信息
+                      </button>
                       <button
                         onClick={() => openEditActivity(a)}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors"
@@ -346,7 +371,7 @@ const ClubAdminPage: React.FC = () => {
                 <th className="px-6 py-3">姓名</th>
                 <th className="px-6 py-3">用户名</th>
                 <th className="px-6 py-3">学号</th>
-                <th className="px-6 py-3">学院</th>
+                <th className="px-6 py-3">学校</th>
                 <th className="px-6 py-3">社团</th>
                 <th className="px-6 py-3">操作</th>
               </tr>
@@ -461,6 +486,131 @@ const ClubAdminPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 活动详情弹窗 */}
+      {detailActivity && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="relative w-full h-48">
+              <img
+                src={`https://picsum.photos/seed/${detailActivity.activityId}/600/400`}
+                alt={detailActivity.title}
+                className="absolute inset-0 w-full h-full object-cover rounded-t-xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-t-xl"></div>
+              <div className="absolute bottom-0 left-0 p-6 text-white">
+                <p className="text-sm font-semibold mb-1">{detailActivity.clubName}</p>
+                <h2 className="text-2xl font-extrabold" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.7)' }}>{detailActivity.title}</h2>
+              </div>
+              <button
+                onClick={() => setDetailActivity(null)}
+                className="absolute top-3 right-3 text-white bg-black/40 hover:bg-black/60 rounded-full w-8 h-8 flex items-center justify-center text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="lg:w-1/2">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-xl">
+                    <h3 className="text-lg font-bold mb-3">关于活动</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {detailActivity.content || '暂无简介'}
+                    </p>
+                  </div>
+                </div>
+                <div className="lg:w-1/2">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-xl space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <CalendarIcon className="w-6 h-6 text-indigo-500 flex-shrink-0" />
+                      <div>
+                        <p className="font-bold">
+                          {detailActivity.publishTime
+                            ? new Date(detailActivity.publishTime).toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                            : '-'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">发布日期</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <LocationMarkerIcon className="w-6 h-6 text-indigo-500 flex-shrink-0" />
+                      <div>
+                        <p className="font-bold">{detailActivity.location || '-'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">地点</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 pt-3 border-t dark:border-gray-600">
+                      <ClubIcon className="w-6 h-6 text-indigo-500 flex-shrink-0" />
+                      <div>
+                        <p className="font-bold">{detailActivity.clubName}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">主办社团</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 flex justify-end">
+                <button
+                  onClick={() => setDetailActivity(null)}
+                  className="px-4 py-2 text-sm font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 报名信息弹窗 */}
+      {participantsActivity && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                报名信息 — {participantsActivity.title}
+              </h3>
+              <button
+                onClick={() => setParticipantsActivity(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1">
+              {participantsLoading ? (
+                <p className="text-center text-gray-400 py-10">加载中...</p>
+              ) : participants.length === 0 ? (
+                <p className="text-center text-gray-400 py-10">暂无报名人员</p>
+              ) : (
+                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                  <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
+                    <tr>
+                      <th className="px-6 py-3">#</th>
+                      <th className="px-6 py-3">姓名</th>
+                      <th className="px-6 py-3">学号</th>
+                      <th className="px-6 py-3">联系电话</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {participants.map((p, idx) => (
+                      <tr key={p.userId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td className="px-6 py-3 text-gray-400">{idx + 1}</td>
+                        <td className="px-6 py-3 font-medium text-gray-900 dark:text-white">{p.realName}</td>
+                        <td className="px-6 py-3">{p.userId}</td>
+                        <td className="px-6 py-3">{p.phoneNumber}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 text-right text-xs text-gray-400">
+              共 {participants.length} 人报名
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 编辑社团弹窗 */}
       {editingClub && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -479,7 +629,7 @@ const ClubAdminPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所属学院</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所属学校</label>
                 <input
                   type="text"
                   value={editForm.school}

@@ -88,7 +88,7 @@ const EditProfilePage: React.FC = () => {
             </select>
           </div>
           <div className="sm:col-span-2">
-            <label htmlFor="school" className={labelClass}>学院</label>
+            <label htmlFor="school" className={labelClass}>学校</label>
             <input id="school" name="school" type="text" value={formData.school} onChange={handleChange} className={inputClass} />
           </div>
         </div>

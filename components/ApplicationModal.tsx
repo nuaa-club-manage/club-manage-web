@@ -26,6 +26,10 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!/^\d{11}$/.test(formData.phoneNumber)) {
+      alert('请输入11位手机号');
+      return;
+    }
     onSubmit(formData);
     setFormData({ realName: '', phoneNumber: '' });
   };

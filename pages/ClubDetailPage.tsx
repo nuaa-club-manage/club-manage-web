@@ -322,7 +322,7 @@ const ClubDetailPage: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所在学院 *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所在学校 *</label>
                   <input
                     type="text"
                     value={joinForm.school}

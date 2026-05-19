@@ -48,7 +48,7 @@ const MemberInfoModal: React.FC<MemberInfoModalProps> = ({ person, onClose }) =>
           <InfoRow label="学号" value={person.userId} />
           {person.userName && <InfoRow label="用户名" value={person.userName} />}
           {person.realName && <InfoRow label="真实姓名" value={person.realName} />}
-          {person.school && <InfoRow label="学院" value={person.school} />}
+          {person.school && <InfoRow label="学校" value={person.school} />}
           {person.degree && <InfoRow label="学历" value={person.degree} />}
           {person.phoneNumber && <InfoRow label="联系电话" value={person.phoneNumber} />}
           {person.clubName && <InfoRow label="所属社团" value={person.clubName} />}

@@ -144,7 +144,7 @@ const AdminClubListPage: React.FC = () => {
                     <th className="px-6 py-3">学号</th>
                     <th className="px-6 py-3">用户名</th>
                     <th className="px-6 py-3">真实姓名</th>
-                    <th className="px-6 py-3">学院</th>
+                    <th className="px-6 py-3">学校</th>
                     <th className="px-6 py-3">学历</th>
                     <th className="px-6 py-3">联系电话</th>
                     <th className="px-6 py-3">身份</th>
@@ -211,7 +211,7 @@ const AdminClubListPage: React.FC = () => {
             <thead className="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 uppercase text-xs">
               <tr>
                 <th className="px-6 py-3 text-left">社团名称</th>
-                <th className="px-6 py-3 text-left">学院</th>
+                <th className="px-6 py-3 text-left">学校</th>
                 <th className="px-6 py-3 text-left">状态</th>
                 <th className="px-6 py-3 text-left">成立时间</th>
                 <th className="px-6 py-3 text-left">评分</th>
