@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { mockActivities } from '../data/mockData';
 import { CalendarIcon, LocationMarkerIcon, ClubIcon } from '../components/icons';
 import ApplicationModal from '../components/ApplicationModal';
 import { registerActivity, cancelRegistration, getMyRegistrations, getActivityDetail } from '../services/activityApi';
@@ -9,11 +8,8 @@ import type { ApiActivity } from '../services/activityApi';
 const ActivityDetailPage: React.FC = () => {
   const { activityId } = useParams<{ activityId: string }>();
 
-  const numericId = parseInt(activityId || '');
-  const mockActivity = isNaN(numericId) ? null : mockActivities.find(a => a.id === numericId) ?? null;
-
   const [apiActivity, setApiActivity] = useState<ApiActivity | null>(null);
-  const [loadingActivity, setLoadingActivity] = useState(!mockActivity);
+  const [loadingActivity, setLoadingActivity] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   const [isRegistered, setIsRegistered] = useState(false);
@@ -22,7 +18,7 @@ const ActivityDetailPage: React.FC = () => {
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
-    if (mockActivity || !activityId) return;
+    if (!activityId) return;
     getActivityDetail(activityId)
       .then(setApiActivity)
       .catch(() => setNotFound(true))
@@ -34,7 +30,8 @@ const ActivityDetailPage: React.FC = () => {
     getMyRegistrations()
       .then(records => {
         const cancellable = records.find(r =>
-          r.reviewState === '审核通过' || r.reviewState === '审核中' || r.reviewState === '待审核'
+          r.activityId === activityId &&
+          (r.reviewState === '审核通过' || r.reviewState === '审核中' || r.reviewState === '待审核')
         );
         if (cancellable) {
           setIsRegistered(true);
@@ -48,31 +45,30 @@ const ActivityDetailPage: React.FC = () => {
     return <div className="text-center py-20 text-gray-500">加载中...</div>;
   }
 
-  if (notFound || (!mockActivity && !apiActivity)) {
+  if (notFound || !apiActivity) {
     return <div className="text-center py-20">未找到该活动。</div>;
   }
 
-  const displayTitle = mockActivity ? mockActivity.title : apiActivity!.title;
-  const displayClub = mockActivity ? mockActivity.club : apiActivity!.clubName;
-  const displayClubId = mockActivity ? mockActivity.clubId : apiActivity!.clubId;
-  const displayDescription = mockActivity ? mockActivity.description : apiActivity!.content;
-  const displayLocation = mockActivity ? mockActivity.location : apiActivity!.location;
-  const displayImage = mockActivity
-    ? mockActivity.imageUrl
-    : `https://picsum.photos/seed/${apiActivity!.activityId}/600/400`;
-  const displayDate = mockActivity
-    ? new Date(mockActivity.date).toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-    : apiActivity!.publishTime
-      ? new Date(apiActivity!.publishTime).toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-      : '-';
-  const realActivityId = mockActivity ? String(mockActivity.id) : apiActivity!.activityId;
+  const displayTitle = apiActivity.title;
+  const displayClub = apiActivity.clubName;
+  const displayClubId = apiActivity.clubId;
+  const displayDescription = apiActivity.content;
+  const displayLocation = apiActivity.location;
+  const displayImage = `https://picsum.photos/seed/${apiActivity.activityId}/600/400`;
+  const displayDate = apiActivity.publishTime
+    ? new Date(apiActivity.publishTime).toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : '-';
+  const realActivityId = apiActivity.activityId;
+  const activityState = apiActivity.activityState;
+  const isEnded = activityState === '已结束';
 
   const handleRegistrationSubmit = async (formData: { realName: string; phoneNumber: string }) => {
     try {
       const msg = await registerActivity(realActivityId, formData.realName, formData.phoneNumber);
       const records = await getMyRegistrations();
       const cancellable = records.find(r =>
-        r.reviewState === '审核通过' || r.reviewState === '审核中' || r.reviewState === '待审核'
+        r.activityId === activityId &&
+        (r.reviewState === '审核通过' || r.reviewState === '审核中' || r.reviewState === '待审核')
       );
       if (cancellable) setRegistrationId(cancellable.registrationId);
       setIsRegistered(true);
@@ -143,10 +139,25 @@ const ActivityDetailPage: React.FC = () => {
                       <p className="text-sm text-gray-500 dark:text-gray-400">主办社团</p>
                     </div>
                   </div>
+                  {apiActivity?.capacityLimit != null && (
+                    <div className="flex items-center space-x-4 pt-4 border-t dark:border-gray-700">
+                      <svg className="w-7 h-7 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2h5M12 12a4 4 0 100-8 4 4 0 000 8z" />
+                      </svg>
+                      <div>
+                        <p className="font-bold text-lg">{apiActivity.capacityLimit} 人</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">限制人数</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
-                  {isRegistered ? (
+                  {isEnded ? (
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-6 rounded-lg text-base text-center">
+                      活动已结束
+                    </div>
+                  ) : isRegistered ? (
                     <>
                       <button disabled className="w-full bg-gray-400 text-white font-bold py-3 px-6 rounded-lg text-base shadow-lg cursor-not-allowed">
                         已报名

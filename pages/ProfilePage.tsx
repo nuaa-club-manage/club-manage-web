@@ -5,12 +5,28 @@ import Avatar from '../components/Avatar';
 import { UsersIcon, CalendarIcon, ArrowRightIcon, StarRatingIcon, LockClosedIcon } from '../components/icons';
 import StarRating from '../components/StarRating';
 import { fetchUserInfo } from '../services/userApi';
-import { getMyRegistrations, cancelRegistration } from '../services/activityApi';
+import { getMyRegistrations, cancelRegistration, getMyActivities } from '../services/activityApi';
+import type { ApiActivity } from '../services/activityApi';
 import { getMyRatings, cancelRating } from '../services/ratingApi';
 import type { MyRatingRecord } from '../services/ratingApi';
 import { getMyClubApplications } from '../services/memberApi';
 import type { MyClubApplication } from '../services/memberApi';
+import { getMyClubCreateApplications } from '../services/clubApi';
+import type { ApiClub } from '../services/clubApi';
 import type { UserInfo, MyRegistrationRecord } from '../types';
+
+const PENDING_STATES = ['待审核', '未通过'];
+const PENDING_REG_STATES = ['审核中', '审核失败'];
+
+function stateColor(state: string) {
+  if (state === '待审核' || state === '审核中') {
+    return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+  }
+  if (state === '未通过' || state === '审核失败') {
+    return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+  }
+  return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+}
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('applications');
@@ -21,8 +37,13 @@ const ProfilePage: React.FC = () => {
   const [myRatings, setMyRatings] = useState<MyRatingRecord[]>([]);
   const [ratingsLoading, setRatingsLoading] = useState(false);
   const [cancellingRatingId, setCancellingRatingId] = useState<string | null>(null);
-  const [myApplications, setMyApplications] = useState<MyClubApplication[]>([]);
+  const [allClubApplications, setAllClubApplications] = useState<MyClubApplication[]>([]);
+  const [myCreateApplications, setMyCreateApplications] = useState<ApiClub[]>([]);
+  const [myActivityApplications, setMyActivityApplications] = useState<ApiActivity[]>([]);
+  const [myRegApplications, setMyRegApplications] = useState<MyRegistrationRecord[]>([]);
   const [applicationsLoading, setApplicationsLoading] = useState(false);
+  const [myPublishedActivities, setMyPublishedActivities] = useState<ApiActivity[]>([]);
+  const [publishedLoading, setPublishedLoading] = useState(false);
 
   useEffect(() => {
     fetchUserInfo().then(setUserInfo).catch((err) => console.error('[userInfo]', err));
@@ -43,12 +64,34 @@ const ProfilePage: React.FC = () => {
         .catch((err) => console.error('[myRatings]', err))
         .finally(() => setRatingsLoading(false));
     }
-    if ((activeTab === 'applications' || activeTab === 'joinedClubs') && myApplications.length === 0) {
+    if (activeTab === 'applications' && !applicationsLoading && myCreateApplications.length === 0 && allClubApplications.length === 0) {
       setApplicationsLoading(true);
-      getMyClubApplications()
-        .then(setMyApplications)
+      Promise.all([
+        getMyClubCreateApplications(),
+        getMyClubApplications(),
+        getMyActivities(),
+        getMyRegistrations(),
+      ])
+        .then(([creates, joins, activities, regs]) => {
+          setMyCreateApplications(creates);
+          setAllClubApplications(joins);
+          setMyActivityApplications(activities.filter(a => PENDING_STATES.includes(a.activityState)));
+          setMyRegApplications(regs.filter(r => PENDING_REG_STATES.includes(r.reviewState)));
+        })
         .catch((err) => console.error('[myApplications]', err))
         .finally(() => setApplicationsLoading(false));
+    }
+    if (activeTab === 'joinedClubs' && allClubApplications.length === 0) {
+      getMyClubApplications()
+        .then(setAllClubApplications)
+        .catch((err) => console.error('[myClubApplications]', err));
+    }
+    if (activeTab === 'publishedActivities' && myPublishedActivities.length === 0) {
+      setPublishedLoading(true);
+      getMyActivities()
+        .then(setMyPublishedActivities)
+        .catch((err) => console.error('[myPublishedActivities]', err))
+        .finally(() => setPublishedLoading(false));
     }
   }, [activeTab]);
 
@@ -86,11 +129,18 @@ const ProfilePage: React.FC = () => {
     }`;
 
   const tabs = [
-    { id: 'applications', label: '我的入社申请', icon: UsersIcon },
+    { id: 'applications', label: '我的申请', icon: UsersIcon },
+    { id: 'publishedActivities', label: '我发布的活动', icon: CalendarIcon },
     { id: 'joinedClubs', label: '我加入的社团', icon: UsersIcon },
     { id: 'registeredActivities', label: '我报名的活动', icon: CalendarIcon },
     { id: 'ratings', label: '我的评分', icon: StarRatingIcon },
   ];
+
+  const totalApplications =
+    myCreateApplications.length +
+    allClubApplications.filter((a: MyClubApplication) => PENDING_STATES.includes(a.reviewState)).length +
+    myActivityApplications.length +
+    myRegApplications.length;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -131,37 +181,135 @@ const ProfilePage: React.FC = () => {
 
           <div className="mt-6">
             {activeTab === 'applications' && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {applicationsLoading ? (
                   <p className="text-center text-gray-400 py-10">加载中...</p>
-                ) : myApplications.length === 0 ? (
-                  <p className="text-center text-gray-500 dark:text-gray-400 py-10">暂无入社申请记录</p>
-                ) : myApplications.map((item, idx) => (
-                  <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-gray-900 dark:text-white">{item.clubName}</h3>
-                      <p className="text-xs text-gray-400 mt-1">社团ID：{item.clubId}</p>
+                ) : totalApplications === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-10">暂无待审核或未通过的申请</p>
+                ) : (
+                  <>
+                    {/* 成立社团申请 */}
+                    {myCreateApplications.length > 0 && (
+                      <section>
+                        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">成立社团申请</h2>
+                        <div className="space-y-3">
+                          {myCreateApplications.map(item => (
+                            <div key={item.clubId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
+                              <div>
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white">{item.clubName}</h3>
+                                <p className="text-xs text-gray-400 mt-1">{item.school}</p>
+                              </div>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stateColor(item.clubState)}`}>
+                                {item.clubState}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* 加入社团申请 */}
+                    {allClubApplications.filter((a: MyClubApplication) => PENDING_STATES.includes(a.reviewState)).length > 0 && (
+                      <section>
+                        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">加入社团申请</h2>
+                        <div className="space-y-3">
+                          {allClubApplications.filter((a: MyClubApplication) => PENDING_STATES.includes(a.reviewState)).map((item: MyClubApplication, idx: number) => (
+                            <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
+                              <div>
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white">{item.clubName}</h3>
+                                <p className="text-xs text-gray-400 mt-1">社团ID：{item.clubId}</p>
+                              </div>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stateColor(item.reviewState)}`}>
+                                {item.reviewState}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* 发布活动申请 */}
+                    {myActivityApplications.length > 0 && (
+                      <section>
+                        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">发布活动申请</h2>
+                        <div className="space-y-3">
+                          {myActivityApplications.map(item => (
+                            <div key={item.activityId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
+                              <div className="flex-grow">
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white">{item.title}</h3>
+                                <p className="text-xs text-gray-400 mt-1">{item.clubName}{item.publishTime ? `  ·  ${new Date(item.publishTime).toLocaleDateString('zh-CN')}` : ''}</p>
+                              </div>
+                              <span className={`ml-4 flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stateColor(item.activityState)}`}>
+                                {item.activityState}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* 报名活动申请 */}
+                    {myRegApplications.length > 0 && (
+                      <section>
+                        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">报名活动申请</h2>
+                        <div className="space-y-3">
+                          {myRegApplications.map(record => (
+                            <div key={record.registrationId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
+                              <div className="flex-grow">
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white">{record.title}</h3>
+                                <p className="text-xs text-gray-400 mt-1">{new Date(record.publishTime).toLocaleDateString('zh-CN')}</p>
+                              </div>
+                              <span className={`ml-4 flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stateColor(record.reviewState)}`}>
+                                {record.reviewState}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+            {activeTab === 'publishedActivities' && (
+              <div className="space-y-4">
+                {publishedLoading ? (
+                  <p className="text-center text-gray-400 py-10">加载中...</p>
+                ) : myPublishedActivities.filter(a => a.activityState === '已发布' || a.activityState === '已结束').length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-10">暂无已通过审核的发布活动</p>
+                ) : myPublishedActivities.filter(a => a.activityState === '已发布' || a.activityState === '已结束').map(item => (
+                  <div key={item.activityId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
+                    <div className="flex-grow">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">{item.title}</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 truncate max-w-md">{item.content}</p>
+                      <div className="flex items-center gap-4 mt-1">
+                        <p className="text-xs text-gray-400">{item.clubName}</p>
+                        {item.location && <p className="text-xs text-gray-400">{item.location}</p>}
+                        <p className="text-xs text-gray-400">{item.publishTime ? new Date(item.publishTime).toLocaleDateString('zh-CN') : ''}</p>
+                      </div>
                     </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      item.reviewState === '审核通过' || item.reviewState === '通过'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                        : item.reviewState === '审核退回' || item.reviewState === '拒绝'
-                        ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                    }`}>
-                      {item.reviewState}
-                    </span>
+                    <div className="ml-4 flex-shrink-0 flex items-center gap-3">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        item.activityState === '已发布'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                          : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                      }`}>
+                        {item.activityState}
+                      </span>
+                      <Link to={`/activities/${item.activityId}`} className="inline-flex items-center font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm">
+                        查看详情
+                        <ArrowRightIcon className="w-4 h-4 ml-1" />
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
             {activeTab === 'joinedClubs' && (
               <div className="space-y-4">
-                {applicationsLoading ? (
-                  <p className="text-center text-gray-400 py-10">加载中...</p>
-                ) : myApplications.filter(a => a.reviewState === '审核通过' || a.reviewState === '通过').length === 0 ? (
+                {allClubApplications.filter((a: MyClubApplication) => a.reviewState === '通过').length === 0 ? (
                   <p className="text-center text-gray-500 dark:text-gray-400 py-10">您还没有加入任何社团</p>
-                ) : myApplications.filter(a => a.reviewState === '审核通过' || a.reviewState === '通过').map((item, idx) => (
+                ) : allClubApplications.filter((a: MyClubApplication) => a.reviewState === '通过').map((item: MyClubApplication, idx: number) => (
                   <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white">{item.clubName}</h3>
@@ -192,7 +340,7 @@ const ProfilePage: React.FC = () => {
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         record.reviewState === '审核通过'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                          : record.reviewState === '审核退回'
+                          : record.reviewState === '审核失败'
                           ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                           : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
                       }`}>

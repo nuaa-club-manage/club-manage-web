@@ -91,6 +91,23 @@ const ClubAdminPage: React.FC = () => {
   };
 
   const handleAudit = async (registrationId: string, pass: boolean) => {
+    if (pass) {
+      const record = records.find(r => r.registrationId === registrationId);
+      if (record) {
+        const activity = allActivities.find(a => a.activityId === record.activityId);
+        if (activity && activity.capacityLimit != null && activity.capacityLimit > 0) {
+          try {
+            const currentParticipants = await getActivityParticipants(record.activityId);
+            if (currentParticipants.length >= activity.capacityLimit) {
+              alert(`该活动报名人数已达上限（${activity.capacityLimit}人），无法通过更多报名`);
+              return;
+            }
+          } catch {
+            // 获取失败时不阻止审核
+          }
+        }
+      }
+    }
     setAuditing(registrationId);
     try {
       const msg = await auditRegistration(registrationId, pass);

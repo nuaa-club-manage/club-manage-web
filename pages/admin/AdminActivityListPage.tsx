@@ -182,6 +182,15 @@ const AdminActivityListPage: React.FC = () => {
                           <p className="text-xs text-gray-500 dark:text-gray-400">主办社团</p>
                         </div>
                       </div>
+                      <div className="flex items-center space-x-3 pt-3 border-t dark:border-gray-600">
+                        <svg className="w-6 h-6 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2h5M12 12a4 4 0 100-8 4 4 0 000 8z" />
+                        </svg>
+                        <div>
+                          <p className="font-bold">{detail!.capacityLimit != null ? `${detail!.capacityLimit} 人` : '-'}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">限制人数</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

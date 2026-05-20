@@ -26,8 +26,6 @@ const ClubDetailPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isMember, setIsMember] = useState(mockClub ? mockUser.joinedClubs.includes(mockClub.id) : false);
   const [joining, setJoining] = useState(false);
-  const [showJoinForm, setShowJoinForm] = useState(false);
-  const [joinForm, setJoinForm] = useState({ realName: '', studentId: '', school: '', grade: '', introduction: '', reason: '' });
   const [myClubRating, setMyClubRating] = useState<MyRatingRecord | null>(null);
   const [cancellingRating, setCancellingRating] = useState(false);
   const [clubAverageScore, setClubAverageScore] = useState<ClubAverageScore | null>(null);
@@ -155,23 +153,16 @@ const ClubDetailPage: React.FC = () => {
         setJoining(false);
       }
     } else {
-      setShowJoinForm(true);
-    }
-  };
-
-  const handleJoinSubmit = async () => {
-    if (!clubId) return;
-    setJoining(true);
-    try {
-      const msg = await joinClub(clubId);
-      alert(msg);
-      setIsMember(true);
-      setShowJoinForm(false);
-      setJoinForm({ realName: '', studentId: '', school: '', grade: '', introduction: '', reason: '' });
-    } catch (err: any) {
-      alert(err.message ?? '申请失败，请重试');
-    } finally {
-      setJoining(false);
+      setJoining(true);
+      try {
+        const msg = await joinClub(clubId);
+        alert(msg);
+        setIsMember(true);
+      } catch (err: any) {
+        alert(err.message ?? '申请失败，请重试');
+      } finally {
+        setJoining(false);
+      }
     }
   };
 
@@ -294,91 +285,6 @@ const ClubDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 加入社团表单弹窗 */}
-      {showJoinForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">申请加入 {displayName}</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">姓名 *</label>
-                  <input
-                    type="text"
-                    value={joinForm.realName}
-                    onChange={e => setJoinForm(f => ({ ...f, realName: e.target.value }))}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">学号 *</label>
-                  <input
-                    type="text"
-                    value={joinForm.studentId}
-                    onChange={e => setJoinForm(f => ({ ...f, studentId: e.target.value }))}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所在学校 *</label>
-                  <input
-                    type="text"
-                    value={joinForm.school}
-                    onChange={e => setJoinForm(f => ({ ...f, school: e.target.value }))}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">年级 *</label>
-                  <input
-                    type="text"
-                    placeholder="如：2023级"
-                    value={joinForm.grade}
-                    onChange={e => setJoinForm(f => ({ ...f, grade: e.target.value }))}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">个人简介</label>
-                <textarea
-                  rows={2}
-                  value={joinForm.introduction}
-                  onChange={e => setJoinForm(f => ({ ...f, introduction: e.target.value }))}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">申请理由 *</label>
-                <textarea
-                  rows={3}
-                  value={joinForm.reason}
-                  onChange={e => setJoinForm(f => ({ ...f, reason: e.target.value }))}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowJoinForm(false)}
-                disabled={joining}
-                className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleJoinSubmit}
-                disabled={joining || !joinForm.realName || !joinForm.studentId || !joinForm.school || !joinForm.grade || !joinForm.reason}
-                className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50"
-              >
-                {joining ? '提交中...' : '提交申请'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

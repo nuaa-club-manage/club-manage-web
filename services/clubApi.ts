@@ -63,6 +63,20 @@ export async function getManagedClubs(): Promise<ApiClub[]> {
   return json.data as ApiClub[];
 }
 
+export async function getMyClubApplications(): Promise<ApiClub[]> {
+  const res = await fetch(`${BASE_URL}/api/club/my-applications`, {
+    headers: getAuthHeader(),
+  });
+  const json = await res.json();
+  if (json.code !== undefined && json.code !== 200) throw new Error(json.message);
+  if (!Array.isArray(json.data)) return [];
+  return json.data as ApiClub[];
+}
+
+export async function getMyClubCreateApplications(): Promise<ApiClub[]> {
+  return getMyClubApplications();
+}
+
 export async function updateClub(clubId: string, clubName: string, clubInformation: string, school: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/api/club/update`, {
     method: 'PUT',
