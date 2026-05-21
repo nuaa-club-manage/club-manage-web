@@ -337,6 +337,9 @@ const ProfilePage: React.FC = () => {
                       <p className="text-xs text-gray-400 mt-1">{new Date(record.publishTime).toLocaleDateString('zh-CN')}</p>
                     </div>
                     <div className="ml-4 flex-shrink-0 flex items-center gap-3">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stateColor(record.activityState)}`}>
+                        {record.activityState}
+                      </span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         record.reviewState === '审核通过'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
@@ -346,7 +349,7 @@ const ProfilePage: React.FC = () => {
                       }`}>
                         {record.reviewState}
                       </span>
-                      {(record.reviewState === '审核中' || record.reviewState === '待审核' || record.reviewState === '审核通过') && (
+                      {(record.reviewState === '审核中' || record.reviewState === '待审核' || record.reviewState === '审核通过') && record.activityState !== '已结束' && (
                         <button
                           onClick={() => handleCancelRegistration(record.registrationId)}
                           disabled={cancellingId === record.registrationId}

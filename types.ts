@@ -92,6 +92,7 @@ export interface MyRegistrationRecord {
   content: string;
   publishTime: string;
   reviewState: string;
+  activityState: string;
 }
 
 export interface AdminUpdateUserRequest {

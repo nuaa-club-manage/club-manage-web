@@ -352,7 +352,7 @@ const ClubAdminPage: React.FC = () => {
                       >
                         修改信息
                       </button>
-                      {a.activityState !== '已结束' && (
+                      {a.activityState === '已发布' && (
                         <button
                           onClick={() => { setEndingActivity(a); setEndForm({ summary: '', participantList: '' }); }}
                           className="bg-gray-600 hover:bg-gray-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors"
